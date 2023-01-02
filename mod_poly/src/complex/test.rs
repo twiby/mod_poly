@@ -65,14 +65,18 @@ fn complex_add() {
 	assert_eq!(a + b, b);
 }
 
+#[test]
+fn complex_dot() {
+	let a = Complex::new(1.0, 1.0);
+	let b = Complex::new(2.0, 3.0);
+
+	assert_eq!(Complex::dot(a, b), Complex::new(2.0, 3.0));
+}
 
 #[test]
 fn complex_mul() {
-	let a = Complex::new(0.0, 0.0);
-	let mut b = a;
+	let a = Complex::new(1.0, 1.0);
+	let b = Complex::new(2.0, 3.0);
 
-	b.r = 1.0;
-	b.i = 1.0;
-
-	assert_eq!(a * b, a);
+	assert_eq!(a * b, Complex::new(-1.0, 5.0));
 }

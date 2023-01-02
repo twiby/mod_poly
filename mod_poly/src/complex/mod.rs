@@ -16,6 +16,12 @@ impl<T: Number> Complex<T> {
 	pub fn new(real: T, imag: T) -> Self {
 		Self{r: real, i: imag}
 	}
+
+	#[allow(dead_code)]
+	pub fn dot(self, other: Complex<T>) -> Self 
+	where T: std::ops::Mul<T, Output= T> {
+		Self{r: self.r * other.r, i: self.i * other.i}
+	}
 }
 
 impl<T: Number> From<(T, T)> for Complex<T> {
@@ -40,10 +46,12 @@ where T: Number + std::ops::Add<T, Output = T> {
 }
 
 impl<T> std::ops::Mul<Complex<T>> for Complex<T> 
-where T: Number + std::ops::Mul<T, Output = T> {
+where T: Number + std::ops::Add<T, Output = T> + std::ops::Sub<T, Output = T> + std::ops::Mul<T, Output = T> {
 	type Output = Complex<T>;
 
 	fn mul(self, other: Complex<T>) -> Self {
-		Self{r: self.r * other.r, i: self.i * other.i}
+		Self{
+			r: self.r * other.r - self.i * other.i, 
+			i: self.r * other.i + self.i * other.r}
 	}
 }
