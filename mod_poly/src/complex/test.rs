@@ -44,6 +44,17 @@ fn complex_from_slice_buffer_overflow() {
 }
 
 #[test]
+fn complex_from_f32() {
+	let a = Complex::<f32>::from(3.5);
+	let b = Complex::<f64>::from(3.5);
+
+	assert_eq!(a.r, 3.5);
+	assert_eq!(a.i, 0.0);
+	assert_eq!(b.r, 3.5);
+	assert_eq!(b.i, 0.0);
+}
+
+#[test]
 fn complex_copy() {
 	let a = Complex::new(0.0, 0.0);
 	let mut b = a;
@@ -79,4 +90,14 @@ fn complex_mul() {
 	let b = Complex::new(2.0, 3.0);
 
 	assert_eq!(a * b, Complex::new(-1.0, 5.0));
+}
+
+#[test]
+fn complex_addassign() {
+	let mut a = Complex::new(1.0, 1.0);
+	let b = Complex::new(2.0, 3.0);
+
+	a += b;
+
+	assert_eq!(a, Complex::new(3.0, 4.0));
 }
