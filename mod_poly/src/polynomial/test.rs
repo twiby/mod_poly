@@ -207,3 +207,24 @@ fn add_assign_mod_polynomial_error() {
 	let mut sum = mod_poly_5.clone();
 	sum += &mod_poly_6;
 }
+
+#[test]
+fn mult_mod_polynomial() {
+	// P1(x) = 1 + 2i*x + (1 + i)*x²
+	// P2(x) = 1 + i + x + 2i*x²
+	let a = Complex::<f32>::from(1.0);
+	let b = I_F32 * Complex::<f32>::from(2.0);
+	let c = Complex::new(1.0, 1.0);
+
+	let mod_poly_1 = ModularArithmeticPolynomial::new(&Polynomial::new(&[a,b,c]), 3);
+	let mod_poly_2 = ModularArithmeticPolynomial::new(&Polynomial::new(&[c,a,b]), 3);
+
+	assert_eq!(mod_poly_1.apply(Complex::<f32>::from(1.0)), Complex::new(2.0, 3.0));
+	assert_eq!(mod_poly_2.apply(Complex::<f32>::from(1.0)), Complex::new(2.0, 3.0));
+
+	let prod = (&mod_poly_1 * &mod_poly_2).expect("");
+	assert_eq!(prod.polynomial.coefs.len(), 3);
+	assert_eq!(prod.polynomial.coefs[0], Complex::<f32>::new(-2.0, 2.0));
+	assert_eq!(prod.polynomial.coefs[1], Complex::<f32>::new(-3.0, 4.0));
+	assert_eq!(prod.polynomial.coefs[2], Complex::<f32>::new(0.0, 6.0));
+}

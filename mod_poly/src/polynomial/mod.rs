@@ -7,7 +7,7 @@ mod test;
 
 use crate::complex::Number;
 
-use std::ops::{Add, AddAssign};
+use std::ops::{Add, AddAssign, Mul};
 
 /// Efficient integer power function, mercilessly stolen from num crate (unused for now)
 #[inline]
@@ -124,6 +124,11 @@ impl<T: Number> ModularArithmeticPolynomial<T> {
 		Self{polynomial: Self::sanitize(poly, modulus)}
 	}
 
+	/// Constructor for a zero polynomial
+	pub fn new_zero(modulus: usize) -> Self {
+		Self{polynomial: Self::sanitize(&Polynomial::<T>::new(&[]), modulus)}
+	}
+
 	/// Calls the underlying polynomial call function
 	pub fn apply(&self, x: T) -> T {
 		self.polynomial.apply(x)
@@ -178,3 +183,25 @@ impl<'a, T: Number> AddAssign<&'a ModularArithmeticPolynomial<T>> for ModularAri
 	}
 }
 
+/// The Mul operation for polynomials references in a modular arithmetic.
+impl<'a, T: Number> Mul for &'a ModularArithmeticPolynomial<T> {
+	type Output = ModularArithmeticResult<T>;
+
+	fn mul(self, other: &'a ModularArithmeticPolynomial<T>) -> ModularArithmeticResult<T> {
+		self.check_modulus(&other)?;
+
+		let modulus = self.modulus();
+		let mut ret = ModularArithmeticPolynomial::<T>::new_zero(self.modulus());
+
+		for deg in 0..modulus {
+			let mut b_idx = deg;
+			for a_idx in 0..modulus {
+				ret.polynomial.coefs[deg] += self.polynomial.coefs[a_idx] * other.polynomial.coefs[b_idx];
+				b_idx += ((b_idx == 0) as usize) * modulus;
+				b_idx -= 1;
+			}
+		}
+
+		Ok(ret)
+	}
+}
