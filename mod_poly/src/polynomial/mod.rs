@@ -12,7 +12,7 @@ struct Polynomial<T: Number> {
 
 // Efficient integer power, mercilessly stolen from num crate
 #[inline]
-pub fn pow<T: Number + Mul<T, Output = T>>(mut base: T, mut exp: usize) -> T {
+pub fn pow<T: Number>(mut base: T, mut exp: usize) -> T {
 	if exp == 0 { return T::from(1.0); }
 
 	while exp & 1 == 0 {
@@ -32,7 +32,7 @@ pub fn pow<T: Number + Mul<T, Output = T>>(mut base: T, mut exp: usize) -> T {
 	acc
 }
 
-impl<T: Number + Mul<Output = T> + Add<Output = T>> Polynomial<T> {
+impl<T: Number> Polynomial<T> {
 	pub fn new(arr: &[T]) -> Self {
 		assert!(arr.len() > 0);
 		Self{coefs: arr.to_vec()}
@@ -46,8 +46,10 @@ impl<T: Number + Mul<Output = T> + Add<Output = T>> Polynomial<T> {
 
 	pub fn apply(&self, x: T) -> T {
 		let mut ret = T::from(0.0);
+		let mut x_powers = T::from(1.0);
 		for deg in 0..self.coefs.len() {
-			ret += self.coefs[deg] * pow(x, deg);
+			ret += self.coefs[deg] * x_powers;
+			x_powers *= x;
 		}
 		ret
 	}

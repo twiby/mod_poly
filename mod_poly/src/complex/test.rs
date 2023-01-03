@@ -101,3 +101,13 @@ fn complex_addassign() {
 
 	assert_eq!(a, Complex::new(3.0, 4.0));
 }
+
+#[test]
+fn complex_mulassign() {
+	let mut a = Complex::new(1.0, 1.0);
+	let b = Complex::new(2.0, 3.0);
+
+	a *= b;
+
+	assert_eq!(a, Complex::new(-1.0, 5.0));
+}

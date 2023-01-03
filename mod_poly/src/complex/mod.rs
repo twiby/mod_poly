@@ -1,14 +1,18 @@
 #[cfg(test)]
 mod test;
 
-use std::ops::{Add, Mul, Sub, AddAssign};
+use std::ops::{Add, Mul, Sub, AddAssign, MulAssign};
 
 pub const I_32: Complex::<f32> = Complex{r: 0.0, i: 1.0};
 pub const I_64: Complex::<f64> = Complex{r: 0.0, i: 1.0};
 
 // Custom trait to enable only certain types
-pub trait Number: Copy + PartialEq + From<f32> + AddAssign {}
-pub trait RealNumber: Copy + PartialEq + From<f32> + AddAssign {}
+pub trait Number: 
+	Copy + PartialEq + From<f32> + AddAssign + MulAssign +
+	Add<Output = Self> + Mul<Output = Self> {}
+pub trait RealNumber: 
+	Copy + PartialEq + From<f32> + AddAssign + 
+	Add<Output = Self> + Mul<Output = Self> + Sub<Output = Self> {}
 impl Number for f32 {}
 impl Number for f64 {}
 impl RealNumber for f32 {}
@@ -51,8 +55,7 @@ impl<T: RealNumber> From<f32> for Complex<T> {
 	}
 }
 
-impl<T> Add for Complex<T> 
-where T: RealNumber + Add<Output = T> {
+impl<T: RealNumber> Add for Complex<T> {
 	type Output = Complex<T>;
 
 	fn add(self, other: Complex<T>) -> Self {
@@ -60,8 +63,7 @@ where T: RealNumber + Add<Output = T> {
 	}
 }
 
-impl<T> Mul for Complex<T> 
-where T: RealNumber + Add<Output = T> + Sub<Output = T> + Mul<Output = T> {
+impl<T: RealNumber> Mul for Complex<T> {
 	type Output = Complex<T>;
 
 	fn mul(self, other: Complex<T>) -> Self {
@@ -75,6 +77,14 @@ impl<T: RealNumber> AddAssign for Complex<T> {
 	fn add_assign(&mut self, other: Complex<T>) {
 		self.r += other.r;
 		self.i += other.i;
+	}
+}
+
+impl<T: RealNumber> MulAssign for Complex<T> {
+	fn mul_assign(&mut self, other: Complex<T>) {
+		let real = self.r;
+		self.r = self.r * other.r - self.i * other.i;
+		self.i = real * other.i + self.i * other.r;
 	}
 }
 
