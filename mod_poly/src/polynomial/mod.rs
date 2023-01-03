@@ -164,6 +164,10 @@ impl<T: Number> ModularArithmeticPolynomial<T> {
 }
 
 /// The Add operation for polynomials references in a modular arithmetic.
+///
+/// This operation runs on references to avoid borrowing values (since Polynomial 
+/// doesn't implement the Copy trait). This returns a Result because there potentially 
+/// could be a mismatch of moduli between the two polynomials.
 impl<'a, T: Number> Add for &'a ModularArithmeticPolynomial<T> {
 	type Output = ModularArithmeticResult<T>;
 
@@ -176,6 +180,9 @@ impl<'a, T: Number> Add for &'a ModularArithmeticPolynomial<T> {
 }
 
 /// The AddAssign operation for polynomials reference in a modular arithmetic.
+///
+/// This operation can potentially panic, if the two polynomials don't have
+/// the same modulus
 impl<'a, T: Number> AddAssign<&'a ModularArithmeticPolynomial<T>> for ModularArithmeticPolynomial<T> {
 	fn add_assign(&mut self, other: &'a ModularArithmeticPolynomial<T>) {
 		self.check_modulus(&other).expect("AddAssign in modular arithmetic: modulus mismatched");
@@ -184,6 +191,10 @@ impl<'a, T: Number> AddAssign<&'a ModularArithmeticPolynomial<T>> for ModularAri
 }
 
 /// The Mul operation for polynomials references in a modular arithmetic.
+///
+/// This operation runs on references to avoid borrowing values (since Polynomial 
+/// doesn't implement the Copy trait). This returns a Result because there potentially 
+/// could be a mismatch of moduli between the two polynomials.
 impl<'a, T: Number> Mul for &'a ModularArithmeticPolynomial<T> {
 	type Output = ModularArithmeticResult<T>;
 
