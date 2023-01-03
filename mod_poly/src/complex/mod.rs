@@ -1,23 +1,33 @@
+//! This module implements some of the basic arithmetic operations on complex numbers.
+//! The architecture allows building complex numbers out of any numerical underlying type.
+//! As of now, it is only accessible for f32 and f64 representations.
+
 #[cfg(test)]
 mod test;
 
 use std::ops::{Add, Mul, Sub, AddAssign, MulAssign};
 
-pub const I_32: Complex::<f32> = Complex{r: 0.0, i: 1.0};
-pub const I_64: Complex::<f64> = Complex{r: 0.0, i: 1.0};
+/// number i, on a f32 representation
+pub const I_F32: Complex::<f32> = Complex{r: 0.0, i: 1.0};
+/// number i, on a f64 representation
+pub const I_F64: Complex::<f64> = Complex{r: 0.0, i: 1.0};
 
-// Custom trait to enable only certain types
+/// Custom trait for what can be a number (real or complex)
 pub trait Number: 
 	Copy + PartialEq + From<f32> + AddAssign + MulAssign +
 	Add<Output = Self> + Mul<Output = Self> {}
+/// Custom trait for what can be a real number
 pub trait RealNumber: 
 	Copy + PartialEq + From<f32> + AddAssign + 
 	Add<Output = Self> + Mul<Output = Self> + Sub<Output = Self> {}
+
 impl Number for f32 {}
 impl Number for f64 {}
 impl RealNumber for f32 {}
 impl RealNumber for f64 {}
 
+/// Type representing complex numbers. 
+/// It depends on a generic parameter which represents real part and imaginary part. 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Complex<T: RealNumber> {
 	r: T,
@@ -36,12 +46,14 @@ impl<T: RealNumber> Complex<T> {
 	}
 }
 
+/// Constructor from tuple
 impl<T: RealNumber> From<(T, T)> for Complex<T> {
 	fn from(t: (T, T)) -> Self {
 		Self::new(t.0, t.1)
 	}
 }
 
+/// Constructor from array (size at least 2)
 impl<T: RealNumber> From<&[T]> for Complex<T> {
 	fn from(t: &[T]) -> Self {
 		assert!(t.len() > 1);
@@ -49,6 +61,7 @@ impl<T: RealNumber> From<&[T]> for Complex<T> {
 	}
 }
 
+/// Constructor from f32
 impl<T: RealNumber> From<f32> for Complex<T> {
 	fn from(t: f32) -> Self {
 		Self::new(T::from(t), T::from(0.0))

@@ -1,4 +1,4 @@
-use crate::complex::{Complex, I_32};
+use crate::complex::{Complex, I_F32};
 
 use crate::polynomial;
 use crate::polynomial::Polynomial;
@@ -32,9 +32,10 @@ fn pow_complex() {
 }
 
 #[test]
-#[should_panic]
 fn polynomial_empty() {
-	let _ = Polynomial::<f32>::new(&[]);
+	let p = Polynomial::<f32>::new(&[]);
+
+	assert_eq!(p.apply(1000.0), 0.0);
 }
 
 #[test]
@@ -53,7 +54,7 @@ fn polynomial_real() {
 fn polynomial_complex() {
 	// P(x) = 1 + 2i*x + (1 + i)*x²
 	let a = Complex::<f32>::from(1.0);
-	let b = I_32 * Complex::<f32>::from(2.0);
+	let b = I_F32 * Complex::<f32>::from(2.0);
 	let c = Complex::new(1.0, 1.0);
 
 	let poly_1 = Polynomial::new(&[a,b,c]);
@@ -64,7 +65,7 @@ fn polynomial_complex() {
 #[test]
 fn monomial() {
 	// P(x) = i*x²
-	let poly_1 = Polynomial::new_monomial(I_32, 2);
+	let poly_1 = Polynomial::new_monomial(I_F32, 2);
 
-	assert_eq!(poly_1.apply(Complex::<f32>::from(2.0)), I_32 * Complex::<f32>::from(4.0));
+	assert_eq!(poly_1.apply(Complex::<f32>::from(2.0)), I_F32 * Complex::<f32>::from(4.0));
 }

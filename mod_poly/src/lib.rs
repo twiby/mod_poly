@@ -1,5 +1,8 @@
-mod complex;
-mod polynomial;
+//! This is a custom made module for modular polynomial arithmetic.
+//! It is made to be bound with Python
+
+pub mod complex;
+pub mod polynomial;
 
 pub fn add(left: usize, right: usize) -> usize {
 	left + right

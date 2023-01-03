@@ -1,16 +1,22 @@
+//! This module implements modular polynomial arithmetic
+//! Its has basic setup to create and handle a polynomial, 
+//! but operations are implemented for modular polynoms only
+
 #[cfg(test)]
 mod test;
 
-use std::ops::{Add, Mul};
-
 use crate::complex::Number;
 
+/// Type defining a general polynomial: 
+/// We store all coefficients in a Vec, its index in the Vec reprenting its degree.
+///  If the maximum degree can be known at compile time, this could be on the stack, 
+/// and be made much more efficiently.
 #[derive(Clone)]
-struct Polynomial<T: Number> {
+pub struct Polynomial<T: Number> {
 	coefs: Vec<T>	
 }
 
-// Efficient integer power, mercilessly stolen from num crate
+/// Efficient integer power function, mercilessly stolen from num crate (unused for now)
 #[inline]
 pub fn pow<T: Number>(mut base: T, mut exp: usize) -> T {
 	if exp == 0 { return T::from(1.0); }
@@ -33,17 +39,20 @@ pub fn pow<T: Number>(mut base: T, mut exp: usize) -> T {
 }
 
 impl<T: Number> Polynomial<T> {
+	/// Creates a polynomial: This array must contains coefficients stored in the order of
+	/// their degree.
 	pub fn new(arr: &[T]) -> Self {
-		assert!(arr.len() > 0);
 		Self{coefs: arr.to_vec()}
 	}
 
+	/// Create a new monomial from one coefficient and its degree
 	pub fn new_monomial(coef: T, deg: usize) -> Self {
 		let mut ret = Polynomial::new(&vec![T::from(0.0); deg]);
 		ret.coefs.push(coef);
 		ret
 	}
 
+	/// Applies the polynomial, as a function, on an input
 	pub fn apply(&self, x: T) -> T {
 		let mut ret = T::from(0.0);
 		let mut x_powers = T::from(1.0);
