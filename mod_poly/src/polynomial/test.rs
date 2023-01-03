@@ -1,7 +1,7 @@
 use crate::complex::{Complex, I_F32};
 
 use crate::polynomial;
-use crate::polynomial::{Polynomial, ModularArithmeticPolynomial};
+use crate::polynomial::{Polynomial, ModularArithmeticPolynomial, ModularArithmeticError};
 
 #[test]
 fn pow_basic() {
@@ -80,20 +80,130 @@ fn mod_polynomial() {
 	let mono_6 = Polynomial::new_monomial(1.0, 6);
 
 	let mut mod_poly = ModularArithmeticPolynomial::new(&mono_1, 3);
+	assert_eq!(mod_poly.polynomial.coefs.len(), mod_poly.modulus());
 	assert_eq!(mod_poly.apply(2.0), 2.0);
 
 	mod_poly = ModularArithmeticPolynomial::new(&mono_2, 3);
+	assert_eq!(mod_poly.polynomial.coefs.len(), mod_poly.modulus());
 	assert_eq!(mod_poly.apply(2.0), 4.0);
 
 	mod_poly = ModularArithmeticPolynomial::new(&mono_3, 3);
+	assert_eq!(mod_poly.polynomial.coefs.len(), mod_poly.modulus());
 	assert_eq!(mod_poly.apply(2.0), 1.0);
 
 	mod_poly = ModularArithmeticPolynomial::new(&mono_4, 3);
+	assert_eq!(mod_poly.polynomial.coefs.len(), mod_poly.modulus());
 	assert_eq!(mod_poly.apply(2.0), 2.0);
 
 	mod_poly = ModularArithmeticPolynomial::new(&mono_5, 3);
+	assert_eq!(mod_poly.polynomial.coefs.len(), mod_poly.modulus());
 	assert_eq!(mod_poly.apply(2.0), 4.0);
 
 	mod_poly = ModularArithmeticPolynomial::new(&mono_6, 3);
+	assert_eq!(mod_poly.polynomial.coefs.len(), mod_poly.modulus());
 	assert_eq!(mod_poly.apply(2.0), 1.0);
+}
+
+#[test]
+fn add_polynomial() {
+	// P(x) = 1 + 2i*x + (1 + i)*x²
+	let a = Complex::<f32>::from(1.0);
+	let b = I_F32 * Complex::<f32>::from(2.0);
+	let c = Complex::new(1.0, 1.0);
+
+	let zero = Complex::<f32>::from(0.0);
+
+	let mut poly_1 = Polynomial::new(&[a,b,zero]);
+	let mut poly_2 = Polynomial::new(&[zero,zero,c]);
+
+	let sum_1 = &poly_1 + &poly_2;
+	assert_eq!(sum_1.apply(Complex::<f32>::from(1.0)), Complex::new(2.0, 3.0));
+
+	let sum_2 = &poly_2 + &poly_1;
+	assert_eq!(sum_2.apply(Complex::<f32>::from(1.0)), Complex::new(2.0, 3.0));
+
+	poly_1 = Polynomial::new(&[a,b,Complex::<f32>::from(1.0)]);
+	poly_2 = Polynomial::new(&[zero,zero,I_F32]);
+	let sum = &poly_1 + &poly_2;
+	assert_eq!(sum.apply(Complex::<f32>::from(2.0)), Complex::new(5.0, 8.0));
+}
+
+#[test]
+fn add_assign_polynomial() {
+	// P(x) = 1 + 2i*x + (1 + i)*x²
+	let a = Complex::<f32>::from(1.0);
+	let b = I_F32 * Complex::<f32>::from(2.0);
+	let c = Complex::new(1.0, 1.0);
+
+	let zero = Complex::<f32>::from(0.0);
+
+	let mut poly_1 = Polynomial::new(&[a,b,zero]);
+	let mut poly_2 = Polynomial::new(&[zero,zero,c]);
+
+	let mut sum_1 = poly_1.clone();
+	sum_1 += &poly_2;
+	assert_eq!(sum_1.apply(Complex::<f32>::from(1.0)), Complex::new(2.0, 3.0));
+
+	let mut sum_2 = poly_2.clone(); 
+	sum_2 += &poly_1;
+	assert_eq!(sum_2.apply(Complex::<f32>::from(1.0)), Complex::new(2.0, 3.0));
+
+	poly_1 = Polynomial::new(&[a,b,Complex::<f32>::from(1.0)]);
+	poly_2 = Polynomial::new(&[zero,zero,I_F32]);
+	let mut sum = poly_1.clone();
+	sum += &poly_2;
+	assert_eq!(sum.apply(Complex::<f32>::from(2.0)), Complex::new(5.0, 8.0));
+}
+
+#[test]
+fn add_mod_polynomial() {
+	let mono_5 = Polynomial::new_monomial(1.0, 5);
+	let mono_6 = Polynomial::new_monomial(1.0, 6);
+
+	let mod_poly_5 = ModularArithmeticPolynomial::new(&mono_5, 3);
+	let mod_poly_6 = ModularArithmeticPolynomial::new(&mono_6, 3);
+
+	let sum_mod_poly = (&mod_poly_5 + &mod_poly_6).expect("");
+	assert_eq!(sum_mod_poly.apply(2.0), 5.0);
+}
+
+#[test]
+fn add_mod_polynomial_error() {
+	let mono_5 = Polynomial::new_monomial(1.0, 5);
+	let mono_6 = Polynomial::new_monomial(1.0, 6);
+
+	let mod_poly_5 = ModularArithmeticPolynomial::new(&mono_5, 3);
+	let mod_poly_6 = ModularArithmeticPolynomial::new(&mono_6, 2);
+
+	match &mod_poly_5 + &mod_poly_6 {
+		Err(ModularArithmeticError::ModulusMismatched) => (),
+		_ => panic!("Wrong error type")
+	};
+}
+
+#[test]
+fn add_assign_mod_polynomial() {
+	let mono_5 = Polynomial::new_monomial(1.0, 5);
+	let mono_6 = Polynomial::new_monomial(1.0, 6);
+
+	let mod_poly_5 = ModularArithmeticPolynomial::new(&mono_5, 3);
+	let mod_poly_6 = ModularArithmeticPolynomial::new(&mono_6, 3);
+
+	let mut sum_mod_poly = mod_poly_5.clone();
+	sum_mod_poly += &mod_poly_6;
+	assert_eq!(sum_mod_poly.apply(2.0), 5.0);
+}
+
+#[test]
+#[should_panic]
+fn add_assign_mod_polynomial_error() {
+	let mono_5 = Polynomial::new_monomial(1.0, 5);
+	let mono_6 = Polynomial::new_monomial(1.0, 6);
+
+	let mod_poly_5 = ModularArithmeticPolynomial::new(&mono_5, 3);
+	let mod_poly_6 = ModularArithmeticPolynomial::new(&mono_6, 2);
+
+	
+	let mut sum = mod_poly_5.clone();
+	sum += &mod_poly_6;
 }
