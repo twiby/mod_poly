@@ -3,6 +3,9 @@ mod test;
 
 use std::ops::{Add, Mul, Sub, AddAssign};
 
+pub const I_32: Complex::<f32> = Complex{r: 0.0, i: 1.0};
+pub const I_64: Complex::<f64> = Complex{r: 0.0, i: 1.0};
+
 // Custom trait to enable only certain types
 pub trait Number: Copy + PartialEq + From<f32> + AddAssign {}
 pub trait RealNumber: Copy + PartialEq + From<f32> + AddAssign {}
@@ -26,10 +29,6 @@ impl<T: RealNumber> Complex<T> {
 	pub fn dot(self, other: Complex<T>) -> Self 
 	where T: std::ops::Mul<T, Output= T> {
 		Self{r: self.r * other.r, i: self.i * other.i}
-	}
-
-	pub fn i() -> Self {
-		Self{r: T::from(0.0), i: T::from(1.0)}
 	}
 }
 
