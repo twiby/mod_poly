@@ -31,16 +31,19 @@ where T: Clone + Copy + From<f32> + AddAssign + Mul<Output = T> {
 	assert!(a.len() == b.len());
 	let size = a.len();
 	let conv_size = 2*size-1;
+	let b_rev: Vec<T> = b.into_iter().rev().copied().collect::<Vec<T>>();
 	let mut convolution = vec![T::from(0.0); conv_size];
 
+
 	for deg in 0..size {
-		for i in 0..(deg+1) {
-			convolution[deg] += a[i] * b[deg-i];
+		for (&aa, &bb) in a[..deg+1].iter().zip(b_rev[size-deg-1..].iter()) {
+			convolution[deg] += aa * bb;
 		}
 	}
+
 	for deg in size..conv_size {
-		for i in deg-size+1..size {
-			convolution[deg] += a[i] * b[deg-i];
+		for (&aa, &bb) in a[deg-size+1..].iter().zip(b_rev[..size+size-deg-1].iter()) {
+			convolution[deg] += aa * bb;
 		}
 	}
 
