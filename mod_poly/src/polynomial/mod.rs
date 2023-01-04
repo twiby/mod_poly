@@ -229,7 +229,7 @@ impl<'a, T: Number> Mul for &'a ModularArithmeticPolynomial<T> {
 	fn mul(self, other: &'a ModularArithmeticPolynomial<T>) -> ModularArithmeticResult<T> {
 		self.check_modulus(&other)?;
 
-		let convolution = convolution::naive_convolution(
+		let convolution = convolution::convolution_for_polynomial_mult_in_modular_arithmetic(
 			&self.polynomial.coefs, 
 			&other.polynomial.coefs);
 

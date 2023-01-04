@@ -10,16 +10,11 @@ pub fn convolution_for_polynomial_mult_in_modular_arithmetic<T>(a: &Vec<T>, b: &
 where T: Clone + Copy + From<f32> + AddAssign + Mul<Output = T> {
 	assert!(a.len() == b.len());
 	let size = a.len();
+	let b_rev: Vec<T> = b.into_iter().rev().copied().collect::<Vec<T>>();
 	let mut convolution = vec![T::from(0.0); size];
 
-	for i in 0..size {
-		let mut k = i;
-		for j in 0..size {
-			convolution[i] += a[j] * b[k];
-			k += ((k == 0) as usize) * size;
-			k -= 1;
-		}
-	}
+	_naive_convolution_with_reversed_signal_begin(&a, &b_rev, &mut convolution[0..size], size);
+	_naive_convolution_with_reversed_signal_end(&a, &b_rev, &mut convolution[0..size], size);
 
 	return convolution;
 }
@@ -30,22 +25,28 @@ pub fn naive_convolution<T>(a: &Vec<T>, b: &Vec<T>) -> Vec<T>
 where T: Clone + Copy + From<f32> + AddAssign + Mul<Output = T> {
 	assert!(a.len() == b.len());
 	let size = a.len();
-	let conv_size = 2*size-1;
 	let b_rev: Vec<T> = b.into_iter().rev().copied().collect::<Vec<T>>();
-	let mut convolution = vec![T::from(0.0); conv_size];
+	let mut convolution = vec![T::from(0.0); 2*size-1];
 
-
-	for deg in 0..size {
-		for (&aa, &bb) in a[..deg+1].iter().zip(b_rev[size-deg-1..].iter()) {
-			convolution[deg] += aa * bb;
-		}
-	}
-
-	for deg in size..conv_size {
-		for (&aa, &bb) in a[deg-size+1..].iter().zip(b_rev[..size+size-deg-1].iter()) {
-			convolution[deg] += aa * bb;
-		}
-	}
+	_naive_convolution_with_reversed_signal_begin(&a, &b_rev, &mut convolution[0..size], size);
+	_naive_convolution_with_reversed_signal_end(&a, &b_rev, &mut convolution[size..2*size-1], size);
 
 	return convolution;
+}
+
+fn _naive_convolution_with_reversed_signal_begin<T>(a: &[T], b: &[T], dst: &mut[T], size: usize) 
+where T: Clone + Copy + AddAssign + Mul<Output = T> {
+	for deg in 0..size {
+		for (&aa, &bb) in a[..deg+1].iter().zip(b[size-deg-1..].iter()) {
+			dst[deg] += aa * bb;
+		}
+	}
+}
+fn _naive_convolution_with_reversed_signal_end<T>(a: &[T], b: &[T], dst: &mut[T], size: usize) 
+where T: Clone + Copy + AddAssign + Mul<Output = T> {
+	for deg in 0..size-1 {
+		for (&aa, &bb) in a[deg+1..].iter().zip(b[..size-deg-1].iter()) {
+			dst[deg] += aa * bb;
+		}
+	}
 }
