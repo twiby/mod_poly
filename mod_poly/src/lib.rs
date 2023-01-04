@@ -3,6 +3,7 @@
 
 pub mod complex;
 pub mod polynomial;
+pub mod matrix;
 
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
