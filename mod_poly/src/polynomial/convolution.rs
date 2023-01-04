@@ -37,18 +37,23 @@ where T: Clone + Copy + From<f32> + AddAssign + Mul<Output = T> {
 }
 
 fn _naive_convolution_with_reversed_signal_begin<T>(a: &[T], b: &[T], dst: &mut[T], size: usize) 
-where T: Clone + Copy + AddAssign + Mul<Output = T> {
+where T: Clone + Copy + From<f32> + AddAssign + Mul<Output = T> {
 	for deg in 0..size {
-		for (&aa, &bb) in a[..deg+1].iter().zip(b[size-deg-1..].iter()) {
-			dst[deg] += aa * bb;
-		}
+		dst[deg] += _scalar_product(&a[..deg+1], &b[size-deg-1..]);
 	}
 }
 fn _naive_convolution_with_reversed_signal_end<T>(a: &[T], b: &[T], dst: &mut[T], size: usize) 
-where T: Clone + Copy + AddAssign + Mul<Output = T> {
+where T: Clone + Copy + From<f32> + AddAssign + Mul<Output = T> {
 	for deg in 0..size-1 {
-		for (&aa, &bb) in a[deg+1..].iter().zip(b[..size-deg-1].iter()) {
-			dst[deg] += aa * bb;
-		}
+		dst[deg] += _scalar_product(&a[deg+1..], &b[..size-deg-1]);
 	}
+}
+
+fn _scalar_product<T>(a: &[T], b: &[T]) -> T
+where T: Clone + Copy + From<f32> + AddAssign + Mul<Output = T> {
+	let mut ret = T::from(0.0);
+	for (&aa, &bb) in a.iter().zip(b.iter()) {
+		ret += aa * bb;
+	}
+	return ret;
 }
