@@ -14,11 +14,11 @@ pub const I_F64: Complex::<f64> = Complex{r: 0.0, i: 1.0};
 
 /// Custom trait for what can be a number (real or complex)
 pub trait Number: 
-	Copy + std::fmt::Debug + PartialEq + From<f32> + 
+	Copy + std::fmt::Debug + std::fmt::Display + PartialEq + From<f32> + 
 	AddAssign + MulAssign + Add<Output = Self> + Mul<Output = Self> {}
 /// Custom trait for what can be a real number
 pub trait RealNumber: 
-	Copy + std::fmt::Debug+ PartialEq + From<f32> +  
+	Copy + std::fmt::Debug + std::fmt::Display + PartialEq + From<f32> +  
 	AddAssign + Add<Output = Self> + Mul<Output = Self> + Sub<Output = Self> {}
 
 impl Number for f32 {}
@@ -43,6 +43,17 @@ impl<T: RealNumber> Complex<T> {
 	pub fn dot(self, other: Complex<T>) -> Self 
 	where T: std::ops::Mul<T, Output= T> {
 		Self{r: self.r * other.r, i: self.i * other.i}
+	}
+}
+
+/// Implement the Display trait
+impl<T: RealNumber> std::fmt::Display for Complex<T> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let mut ret = self.r.to_string();
+		ret.push_str(" + ");
+		ret.push_str(&self.i.to_string());
+		ret.push_str("i");
+		f.write_str(&ret)
 	}
 }
 

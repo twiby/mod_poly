@@ -1,4 +1,11 @@
 [package]
-name = "mod_poly"
+name = "poly_arithmetic"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "poly_arithmetic"
+
+[dependencies.pyo3]
+version = "0.15.1"
+features = ["extension-module"]

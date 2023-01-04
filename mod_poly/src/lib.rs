@@ -4,17 +4,35 @@
 pub mod complex;
 pub mod polynomial;
 
-pub fn add(left: usize, right: usize) -> usize {
-	left + right
+use pyo3::prelude::*;
+use pyo3::exceptions::PyValueError;
+
+#[pyclass]
+struct Complex {
+	val: complex::Complex<f64>
+}
+#[pymethods]
+impl Complex {
+	#[new]
+	fn new(r: f64, i: f64) -> PyResult<Self> {
+		Ok(Self{val: complex::Complex::<f64>::new(r, i)})
+	}
+
+	fn __add__(&self, other: &Self) -> PyResult<Self> {
+		Ok(Self{val: self.val + other.val})
+	}
+	fn __mul__(&self, other: &Self) -> PyResult<Self> {
+		Ok(Self{val: self.val * other.val})
+	}
+
+	fn __str__(&self) -> pyo3::PyResult<String> {
+		return Ok(self.val.to_string());
+	}
 }
 
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[test]
-	fn it_works() {
-		let result = add(2, 2);
-		assert_eq!(result, 4);
-	}
+#[pymodule]
+fn poly_arithmetic(_py: Python, m: &PyModule) -> PyResult<()> {
+	m.add_class::<Complex>()?;
+	// m.add_class::<PyPolynomial>()?;
+	return Ok(());
 }
