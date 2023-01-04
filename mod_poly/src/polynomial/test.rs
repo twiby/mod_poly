@@ -176,7 +176,7 @@ fn add_mod_polynomial_error() {
 	let mod_poly_6 = ModularArithmeticPolynomial::new(&mono_6, 2);
 
 	match &mod_poly_5 + &mod_poly_6 {
-		Err(ModularArithmeticError::ModulusMismatched) => (),
+		Err(ModularArithmeticError::ModulusMismatched(_)) => (),
 		_ => panic!("Wrong error type")
 	};
 }

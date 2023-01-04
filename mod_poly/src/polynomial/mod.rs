@@ -41,6 +41,22 @@ pub struct Polynomial<T: Number> {
 	coefs: Vec<T>	
 }
 
+/// Implement the Display trait
+impl<T: Number> std::fmt::Display for Polynomial<T> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let mut ret = "[".to_string();
+		for i in 0..self.coefs.len()-1 {
+			ret.push_str(&self.coefs[i].to_string());
+			ret.push_str(", ");
+		}
+		if let Some(c) = self.coefs.last() {
+			ret.push_str(&c.to_string());
+		}
+		ret.push(']');
+		f.write_str(&ret)
+	}
+}
+
 impl<T: Number> Polynomial<T> {
 	/// Creates a polynomial: This array must contains coefficients stored in the order of
 	/// their degree.
@@ -107,7 +123,7 @@ impl<'a, T: Number> Add for &'a Polynomial<T> {
 /// Modular arithmetic error types
 #[derive(Debug)]
 pub enum ModularArithmeticError {
-	ModulusMismatched
+	ModulusMismatched(String)
 }
 type ModularArithmeticResult<T> = Result<ModularArithmeticPolynomial<T>, ModularArithmeticError>;
 
@@ -116,6 +132,13 @@ type ModularArithmeticResult<T> = Result<ModularArithmeticPolynomial<T>, Modular
 #[derive(Clone)]
 pub struct ModularArithmeticPolynomial<T: Number> {
 	polynomial: Polynomial<T>
+}
+
+/// Implement the Display trait
+impl<T: Number> std::fmt::Display for ModularArithmeticPolynomial<T> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str(&self.polynomial.to_string())
+	}
 }
 
 impl<T: Number> ModularArithmeticPolynomial<T> {
@@ -157,7 +180,7 @@ impl<T: Number> ModularArithmeticPolynomial<T> {
 	/// Check the modulus of another polynomial against this one
 	fn check_modulus(&self, other: &ModularArithmeticPolynomial<T>) -> Result<(), ModularArithmeticError> {
 		if self.modulus() != other.modulus() {
-			return Err(ModularArithmeticError::ModulusMismatched);
+			return Err(ModularArithmeticError::ModulusMismatched(format!("Modulus mismatch: {}, {}", self.modulus(), other.modulus())));
 		}
 		Ok(())
 	}
