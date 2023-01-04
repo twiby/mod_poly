@@ -113,3 +113,4 @@ impl<T: RealNumber> MulAssign for Complex<T> {
 }
 
 impl<T: RealNumber> Number for Complex<T> {}
+impl<T: RealNumber> crate::matrix::MatrixInput for Complex<T> {}

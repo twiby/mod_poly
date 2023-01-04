@@ -85,6 +85,11 @@ impl<T: Number> Polynomial<T> {
 		ret
 	}
 
+	/// Public getter for a coef
+	pub fn coef(&self, n: usize) -> T {
+		self.coefs[n]
+	}
+
 	/// Internal unsymetrical add operation: p1 has at least as many coefs as p2
 	fn add_internal(p1: &Polynomial<T>, p2: &Polynomial<T>) -> Polynomial<T> {
 		let mut ret = p1.clone();
@@ -158,6 +163,11 @@ impl<T: Number> ModularArithmeticPolynomial<T> {
 	/// Calls the underlying polynomial call function
 	pub fn apply(&self, x: T) -> T {
 		self.polynomial.apply(x)
+	}
+
+	/// Public getter for a coef
+	pub fn coef(&self, n: usize) -> T {
+		self.polynomial.coef(n)
 	}
 
 	fn modulus(&self) -> usize {
@@ -238,3 +248,5 @@ impl<'a, T: Number> Mul for &'a ModularArithmeticPolynomial<T> {
 		))
 	}
 }
+
+impl<T: Number> crate::matrix::MatrixInput for ModularArithmeticPolynomial<T> {}
