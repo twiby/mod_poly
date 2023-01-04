@@ -170,7 +170,7 @@ impl<T: Number> ModularArithmeticPolynomial<T> {
 		self.polynomial.coef(n)
 	}
 
-	fn modulus(&self) -> usize {
+	pub fn modulus(&self) -> usize {
 		self.polynomial.coefs.len()
 	}
 
