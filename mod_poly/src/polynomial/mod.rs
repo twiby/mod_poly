@@ -5,7 +5,8 @@
 #[cfg(test)]
 mod test;
 
-mod convolution;
+pub mod convolution;
+use convolution::convolution_for_polynomial_mult_in_modular_arithmetic as convolution;
 
 use crate::complex::Number;
 
@@ -229,9 +230,7 @@ impl<'a, T: Number> Mul for &'a ModularArithmeticPolynomial<T> {
 	fn mul(self, other: &'a ModularArithmeticPolynomial<T>) -> ModularArithmeticResult<T> {
 		self.check_modulus(&other)?;
 
-		let convolution = convolution::convolution_for_polynomial_mult_in_modular_arithmetic(
-			&self.polynomial.coefs, 
-			&other.polynomial.coefs);
+		let convolution = convolution(&self.polynomial.coefs, &other.polynomial.coefs);
 
 		Ok(ModularArithmeticPolynomial::<T>::new(
 			&Polynomial::<T>::new(&convolution),

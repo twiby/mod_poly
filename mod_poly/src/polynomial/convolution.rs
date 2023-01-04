@@ -1,3 +1,5 @@
+//! This module implements different versions of the convolution operation
+
 use std::ops::{AddAssign, Mul};
 
 /// This is a convolution implementation specifically designed for a modular arithmetic.
