@@ -5,6 +5,8 @@
 #[cfg(test)]
 mod test;
 
+mod convolution;
+
 use crate::complex::Number;
 
 use std::ops::{Add, AddAssign, Mul};
@@ -227,18 +229,13 @@ impl<'a, T: Number> Mul for &'a ModularArithmeticPolynomial<T> {
 	fn mul(self, other: &'a ModularArithmeticPolynomial<T>) -> ModularArithmeticResult<T> {
 		self.check_modulus(&other)?;
 
-		let modulus = self.modulus();
-		let mut ret = ModularArithmeticPolynomial::<T>::new_zero(self.modulus());
+		let convolution = convolution::convolution_for_polynomial_mult_in_modular_arithmetic(
+			&self.polynomial.coefs, 
+			&other.polynomial.coefs);
 
-		for deg in 0..modulus {
-			let mut b_idx = deg;
-			for a_idx in 0..modulus {
-				ret.polynomial.coefs[deg] += self.polynomial.coefs[a_idx] * other.polynomial.coefs[b_idx];
-				b_idx += ((b_idx == 0) as usize) * modulus;
-				b_idx -= 1;
-			}
-		}
-
-		Ok(ret)
+		Ok(ModularArithmeticPolynomial::<T>::new(
+			&Polynomial::<T>::new(&convolution),
+			self.modulus()
+		))
 	}
 }
