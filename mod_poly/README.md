@@ -16,4 +16,4 @@ so to obtain the best performance on your machine, you can compile and install a
 RUSTFLAGS="-C target-cpu=native -C llvm-args=-ffast-math -C opt-level=3" maturin develop -r
 ```
 
-Every Python-related types and bindings is in the `lib.rs` file, which is simple enough to maybe serve as documentation for itself ?
+Every Python-related types and bindings is in the `py_bindings` module, so as to be separate from the rest of the project.
