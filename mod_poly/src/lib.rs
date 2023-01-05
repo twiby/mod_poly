@@ -49,9 +49,9 @@ impl From<matrix::MatrixError> for pyo3::PyErr {
 	}
 }
 
-fn to_complex_vector<T, Input>(vec: &[Input]) -> Vec<complex::Complex<T>> 
-where complex::Complex<T>: From<Input>, T: complex::RealNumber, Input: Copy {
-		vec.iter().map(|t| complex::Complex::<T>::from(*t)).collect::<Vec<complex::Complex<T>>>()
+fn to_internal_vector<Output, Input>(vec: &[Input]) -> Vec<Output> 
+where Output: From<Input>, Input: Clone {
+		vec.iter().map(|t| Output::from(t.clone())).collect::<Vec<Output>>()
 }
 
 #[pyclass]
@@ -104,6 +104,7 @@ impl From<Complex> for complex::Complex<f64> {
 }
 
 #[pyclass]
+#[derive(Clone)]
 struct Polynomial {
 	val: polynomial::ModularArithmeticPolynomial<complex::Complex<f64>>
 }
@@ -111,7 +112,7 @@ struct Polynomial {
 impl Polynomial {
 	#[new]
 	fn new(coefs: Vec<Complex>, modulus: usize) -> PyResult<Self> {
-		let coefs_complex = to_complex_vector(&coefs);
+		let coefs_complex = to_internal_vector(&coefs);
 		Ok(Self{val: polynomial::ModularArithmeticPolynomial::<complex::Complex<f64>>::new(
 			&polynomial::Polynomial::<complex::Complex<f64>>::new(&coefs_complex),
 			modulus
@@ -136,6 +137,16 @@ impl Polynomial {
 		return Ok(self.val.to_string());
 	}
 }
+impl From<polynomial::ModularArithmeticPolynomial<complex::Complex<f64>>> for Polynomial {
+	fn from(c: polynomial::ModularArithmeticPolynomial<complex::Complex<f64>>) -> Self {
+		Self{val: c}
+	}
+}
+impl From<Polynomial> for polynomial::ModularArithmeticPolynomial<complex::Complex<f64>> {
+	fn from(c: Polynomial) -> Self {
+		c.val
+	}
+}
 
 #[pyclass]
 struct Matrix {
@@ -145,7 +156,7 @@ struct Matrix {
 impl Matrix {
 	#[new]
 	fn new(values: Vec<Complex>, rows: usize, cols: usize) -> PyResult<Self> {
-		let values_complex = to_complex_vector(&values);
+		let values_complex = to_internal_vector(&values);
 		Ok(Self{
 			val: matrix::Matrix::new(&values_complex, rows, cols)?
 		})
@@ -172,10 +183,46 @@ impl Matrix {
 	}
 }
 
+#[pyclass]
+struct PolynomialMatrix {
+	val: matrix::Matrix<polynomial::ModularArithmeticPolynomial<complex::Complex<f64>>>
+}
+#[pymethods]
+impl PolynomialMatrix {
+	#[new]
+	fn new(values: Vec<Polynomial>, rows: usize, cols: usize) -> PyResult<Self> {
+		let values_complex = to_internal_vector(&values);
+		Ok(Self{
+			val: matrix::Matrix::new(&values_complex, rows, cols)?
+		})
+	}
+
+	fn __add__(&self, other: &Self) -> PyResult<Self> {
+		Ok(Self{val: (&self.val + &other.val)?})
+	}
+	fn __mul__(&self, other: &Self) -> PyResult<Self> {
+		Ok(Self{val: (&self.val * &other.val)?})
+	}
+
+	fn __getitem__(&self, t: (usize, usize)) -> PyResult<Polynomial> {
+		self.val.check_idx(t.0, t.1)?;
+		Ok(Polynomial::from(self.val[t].clone()))
+	}
+	fn __setitem__(&mut self, t: (usize, usize), p: Polynomial) -> PyResult<()> {
+		self.val.check_idx(t.0, t.1)?;
+		Ok(self.val[t] = polynomial::ModularArithmeticPolynomial::<complex::Complex<f64>>::from(p))
+	}
+
+	fn __str__(&self) -> PyResult<String> {
+		return Ok(self.val.to_string());
+	}
+}
+
 #[pymodule]
 fn poly_arithmetic(_py: Python, m: &PyModule) -> PyResult<()> {
 	m.add_class::<Complex>()?;
 	m.add_class::<Polynomial>()?;
 	m.add_class::<Matrix>()?;
+	m.add_class::<PolynomialMatrix>()?;
 	return Ok(());
 }
