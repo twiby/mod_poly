@@ -9,13 +9,3 @@ pub mod polynomial;
 pub mod matrix;
 pub mod py_bindings;
 
-use pyo3::prelude::*;
-
-#[pymodule]
-fn poly_arithmetic(_py: Python, m: &PyModule) -> PyResult<()> {
-	m.add_class::<py_bindings::types::Complex>()?;
-	m.add_class::<py_bindings::types::Polynomial>()?;
-	m.add_class::<py_bindings::types::Matrix>()?;
-	m.add_class::<py_bindings::types::PolynomialMatrix>()?;
-	return Ok(());
-}
