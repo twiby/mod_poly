@@ -44,6 +44,23 @@ impl<T: RealNumber> Complex<T> {
 	where T: std::ops::Mul<T, Output= T> {
 		Self{r: self.r * other.r, i: self.i * other.i}
 	}
+
+	/// Public getter for real value
+	pub fn real(&self) -> T {
+		self.r
+	}
+	/// Public setter for real value
+	pub fn real_mut(&mut self) -> &mut T {
+		&mut self.r
+	}
+	/// Public getter for imag value
+	pub fn imag(&self) -> T {
+		self.i
+	}
+	/// Public setter for real value
+	pub fn imag_mut(&mut self) -> &mut T {
+		&mut self.i
+	}
 }
 
 /// Implement the Display trait

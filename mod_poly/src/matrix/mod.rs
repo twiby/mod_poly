@@ -18,6 +18,7 @@ pub enum MatrixError {
 	ZeroDimension(String),
 	WrongInputArraySize(String),
 	UncompatibleMatrixShapes(String),
+	OutOfBoundsIndex(String),
 	ModularArithmeticError(ModularArithmeticError)
 }
 impl From<ModularArithmeticError> for MatrixError {
@@ -90,6 +91,17 @@ impl<T: MatrixInput> Matrix<T> {
 	#[inline]
 	pub fn shape(&self) -> (usize, usize) {
 		(self.rows, self.cols)
+	}
+
+	/// Public helper to help detect fraudulant indexing (allows error reporting)
+	pub fn check_idx(&self, x: usize, y: usize) -> Result<(), MatrixError> {
+		if x >= self.rows {
+			return Err(MatrixError::OutOfBoundsIndex(format!("x index too high: {} for size {}", x, self.rows)));
+		} else if y >= self.cols {
+			return Err(MatrixError::OutOfBoundsIndex(format!("y index too high: {} for size {}", y, self.cols)))
+		} else {
+			Ok(())
+		}
 	}
 
 	#[inline]

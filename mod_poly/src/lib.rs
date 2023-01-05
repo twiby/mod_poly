@@ -28,7 +28,8 @@ impl ErrorTypeToString for polynomial::ModularArithmeticError { fn str() -> Stri
 impl From<polynomial::ModularArithmeticError> for pyo3::PyErr {
 	fn from(e: polynomial::ModularArithmeticError) -> Self {
 		match e {
-			polynomial::ModularArithmeticError::ModulusMismatched(s) => py_value_error::<polynomial::ModularArithmeticError>(&s)
+			polynomial::ModularArithmeticError::ModulusMismatched(s) => py_value_error::<polynomial::ModularArithmeticError>(&s),
+			polynomial::ModularArithmeticError::DegreeAboveModulus(s) => py_value_error::<polynomial::ModularArithmeticError>(&s)
 		}
 	}
 }
@@ -42,16 +43,19 @@ impl From<matrix::MatrixError> for pyo3::PyErr {
 			matrix::MatrixError::ZeroDimension(s) => py_value_error::<matrix::MatrixError>(&s),
 			matrix::MatrixError::WrongInputArraySize(s) => py_value_error::<matrix::MatrixError>(&s),
 			matrix::MatrixError::UncompatibleMatrixShapes(s) => py_value_error::<matrix::MatrixError>(&s),
+			matrix::MatrixError::OutOfBoundsIndex(s) => py_value_error::<matrix::MatrixError>(&s),
 			matrix::MatrixError::ModularArithmeticError(s) => pyo3::PyErr::from(s)
 		}
 	}
 }
 
-fn to_complex_vector<T: complex::RealNumber>(vec: &[(T, T)]) -> Vec<complex::Complex<T>> {
-		vec.iter().map(|t| complex::Complex::<T>::new(t.0, t.1)).collect::<Vec<complex::Complex<T>>>()
+fn to_complex_vector<T, Input>(vec: &[Input]) -> Vec<complex::Complex<T>> 
+where complex::Complex<T>: From<Input>, T: complex::RealNumber, Input: Copy {
+		vec.iter().map(|t| complex::Complex::<T>::from(*t)).collect::<Vec<complex::Complex<T>>>()
 }
 
 #[pyclass]
+#[derive(Clone, Copy)]
 struct Complex {
 	val: complex::Complex<f64>
 }
@@ -69,8 +73,33 @@ impl Complex {
 		Ok(Self{val: self.val * other.val})
 	}
 
+	fn __getitem__(&self, n: usize) -> PyResult<f64> {
+		match n {
+			0 => Ok(self.val.real()),
+			1 => Ok(self.val.imag()),
+			_ => Err(PyErr::new::<PyValueError, _>(format!("Index too high for a complex number: {}", n)))
+		}
+	}
+	fn __setitem__(&mut self, n: usize, val: f64) -> PyResult<()> {
+		match n {
+			0 => Ok(*self.val.real_mut() = val),
+			1 => Ok(*self.val.imag_mut() = val),
+			_ => Err(PyErr::new::<PyValueError, _>(format!("Index too high for a complex number: {}", n)))
+		}
+	}
+
 	fn __str__(&self) -> PyResult<String> {
 		return Ok(self.val.to_string());
+	}
+}
+impl From<complex::Complex<f64>> for Complex {
+	fn from(c: complex::Complex<f64>) -> Self {
+		Self{val: c}
+	}
+}
+impl From<Complex> for complex::Complex<f64> {
+	fn from(c: Complex) -> Self {
+		c.val
 	}
 }
 
@@ -81,7 +110,7 @@ struct Polynomial {
 #[pymethods]
 impl Polynomial {
 	#[new]
-	fn new(coefs: Vec<(f64, f64)>, modulus: usize) -> PyResult<Self> {
+	fn new(coefs: Vec<Complex>, modulus: usize) -> PyResult<Self> {
 		let coefs_complex = to_complex_vector(&coefs);
 		Ok(Self{val: polynomial::ModularArithmeticPolynomial::<complex::Complex<f64>>::new(
 			&polynomial::Polynomial::<complex::Complex<f64>>::new(&coefs_complex),
@@ -96,6 +125,13 @@ impl Polynomial {
 		Ok(Self{val: (&self.val * &other.val)?})
 	}
 
+	fn __getitem__(&self, c: usize) -> PyResult<Complex> {
+		Ok(Complex::from(self.val.coef(c)?))
+	}
+	fn __setitem__(&mut self, c:usize, val: Complex) -> PyResult<()> {
+		Ok(*self.val.coef_mut(c)? = complex::Complex::from(val))
+	}
+
 	fn __str__(&self) -> PyResult<String> {
 		return Ok(self.val.to_string());
 	}
@@ -108,7 +144,7 @@ struct Matrix {
 #[pymethods]
 impl Matrix {
 	#[new]
-	fn new(values: Vec<(f64, f64)>, rows: usize, cols: usize) -> PyResult<Self> {
+	fn new(values: Vec<Complex>, rows: usize, cols: usize) -> PyResult<Self> {
 		let values_complex = to_complex_vector(&values);
 		Ok(Self{
 			val: matrix::Matrix::new(&values_complex, rows, cols)?
@@ -120,6 +156,15 @@ impl Matrix {
 	}
 	fn __mul__(&self, other: &Self) -> PyResult<Self> {
 		Ok(Self{val: (&self.val * &other.val)?})
+	}
+
+	fn __getitem__(&self, t: (usize, usize)) -> PyResult<Complex> {
+		self.val.check_idx(t.0, t.1)?;
+		Ok(Complex::from(self.val[t]))
+	}
+	fn __setitem__(&mut self, t: (usize, usize), c: Complex) -> PyResult<()> {
+		self.val.check_idx(t.0, t.1)?;
+		Ok(self.val[t] = complex::Complex::<f64>::from(c))
 	}
 
 	fn __str__(&self) -> PyResult<String> {

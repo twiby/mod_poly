@@ -89,6 +89,10 @@ impl<T: Number> Polynomial<T> {
 	pub fn coef(&self, n: usize) -> T {
 		self.coefs[n]
 	}
+	/// Public setter for a coef
+	pub fn coef_mut(&mut self, n: usize) -> &mut T {
+		&mut self.coefs[n]
+	}
 
 	/// Internal unsymetrical add operation: p1 has at least as many coefs as p2
 	fn add_internal(p1: &Polynomial<T>, p2: &Polynomial<T>) -> Polynomial<T> {
@@ -131,7 +135,8 @@ impl<'a, T: Number> Add for &'a Polynomial<T> {
 /// Modular arithmetic error types
 #[derive(Debug)]
 pub enum ModularArithmeticError {
-	ModulusMismatched(String)
+	ModulusMismatched(String),
+	DegreeAboveModulus(String)
 }
 type ModularArithmeticResult<T> = Result<ModularArithmeticPolynomial<T>, ModularArithmeticError>;
 
@@ -165,9 +170,24 @@ impl<T: Number> ModularArithmeticPolynomial<T> {
 		self.polynomial.apply(x)
 	}
 
+	/// Check coefficient access
+	fn check_coef(&self, n: usize) -> Result<(), ModularArithmeticError> {
+		if n >= self.modulus() {
+			return Err(ModularArithmeticError::DegreeAboveModulus(
+				format!("Degree {} higher than or equal to modulus {}", n, self.modulus())
+			));
+		}
+		Ok(())
+	}
 	/// Public getter for a coef
-	pub fn coef(&self, n: usize) -> T {
-		self.polynomial.coef(n)
+	pub fn coef(&self, n: usize) -> Result<T, ModularArithmeticError> {
+		self.check_coef(n)?;
+		Ok(self.polynomial.coef(n))
+	}
+	/// Public setter for a coef
+	pub fn coef_mut(&mut self, n: usize) -> Result<&mut T, ModularArithmeticError> {
+		self.check_coef(n)?;
+		Ok(self.polynomial.coef_mut(n))
 	}
 
 	pub fn modulus(&self) -> usize {

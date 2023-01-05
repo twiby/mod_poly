@@ -85,12 +85,12 @@ fn sum_matrix_of_polynomial() {
 	let m2 = matrix::Matrix::new(&vec![poly_1.clone(), poly_1], 2, 1).unwrap();
 	let m3 = (&m1 + &m2).unwrap();
 
-	assert_eq!(m3[(0,0)].coef(0), a_p_a);
-	assert_eq!(m3[(0,0)].coef(1), b_p_b);
-	assert_eq!(m3[(0,0)].coef(2), zero);
-	assert_eq!(m3[(0,1)].coef(0), a);
-	assert_eq!(m3[(0,1)].coef(1), b);
-	assert_eq!(m3[(0,1)].coef(2), c);
+	assert_eq!(m3[(0,0)].coef(0).unwrap(), a_p_a);
+	assert_eq!(m3[(0,0)].coef(1).unwrap(), b_p_b);
+	assert_eq!(m3[(0,0)].coef(2).unwrap(), zero);
+	assert_eq!(m3[(0,1)].coef(0).unwrap(), a);
+	assert_eq!(m3[(0,1)].coef(1).unwrap(), b);
+	assert_eq!(m3[(0,1)].coef(2).unwrap(), c);
 }
 
 #[test]
@@ -129,9 +129,9 @@ fn matrix_product_polynomials() {
 
 	assert_eq!(m3.shape(), (1, 1));
 	assert_eq!(m3[(0,0)].modulus(), 3);
-	assert_eq!(m3[(0,0)].coef(0), complex::Complex::<f32>::new(-4.0, 4.0));
-	assert_eq!(m3[(0,0)].coef(1), complex::Complex::<f32>::new(-6.0, 8.0));
-	assert_eq!(m3[(0,0)].coef(2), complex::Complex::<f32>::new(0.0, 12.0));
+	assert_eq!(m3[(0,0)].coef(0).unwrap(), complex::Complex::<f32>::new(-4.0, 4.0));
+	assert_eq!(m3[(0,0)].coef(1).unwrap(), complex::Complex::<f32>::new(-6.0, 8.0));
+	assert_eq!(m3[(0,0)].coef(2).unwrap(), complex::Complex::<f32>::new(0.0, 12.0));
 }
 
 #[test]
