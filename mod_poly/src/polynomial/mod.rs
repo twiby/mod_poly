@@ -12,28 +12,6 @@ use crate::complex::Number;
 
 use std::ops::{Add, AddAssign, Mul};
 
-/// Efficient integer power function, mercilessly stolen from num crate (unused for now)
-#[inline]
-pub fn pow<T: Number>(mut base: T, mut exp: usize) -> T {
-	if exp == 0 { return T::from(1.0); }
-
-	while exp & 1 == 0 {
-		base = base.clone() * base;
-		exp >>= 1;
-	}
-	if exp == 1 { return base }
-
-	let mut acc = base.clone();
-	while exp > 1 {
-		exp >>= 1;
-		base = base.clone() * base;
-		if exp & 1 == 1 {
-			acc = acc * base.clone();
-		}
-	}
-	acc
-}
-
 /// Type defining a general polynomial: 
 /// We store all coefficients in a Vec, its index in the Vec representing its degree.
 /// This sadly means it leaves on the heap, and cannot have the Copy trait. 

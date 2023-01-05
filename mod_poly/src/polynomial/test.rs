@@ -1,35 +1,5 @@
 use crate::complex::{Complex, I_F32};
-
-use crate::polynomial;
 use crate::polynomial::{Polynomial, ModularArithmeticPolynomial, ModularArithmeticError};
-
-#[test]
-fn pow_basic() {
-	let a = 2.0;
-	let b = 10;
-	assert_eq!(polynomial::pow(a, b), 1024.0);
-}
-
-#[test]
-fn pow_real() {
-	let a = Complex::<f32>::from(2.0);
-	let exp = 10;
-	assert_eq!(polynomial::pow(a, exp), Complex::from(1024.0));
-}
-
-#[test]
-fn pow_imag() {
-	let a = Complex::new(0.0, 2.0);
-	let exp = 2;
-	assert_eq!(polynomial::pow(a, exp), Complex::from(-4.0));
-}
-
-#[test]
-fn pow_complex() {
-	let a = Complex::new(1.0, 2.0);
-	let exp = 3;
-	assert_eq!(polynomial::pow(a, exp), Complex::new(-11.0, -2.0));
-}
 
 #[test]
 fn polynomial_empty() {
