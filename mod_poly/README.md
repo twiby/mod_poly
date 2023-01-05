@@ -12,5 +12,5 @@ To compile the library for the whole project, It is advised to use the Python pa
 point (via `requirements.txt` in the parent folder). Also the code is partly written to take advantage of compiler vectorization,
 so to obtain the best performance on your machine, you can compile and install as a Python package using
 ```
-RUSTFLAGS="-C target-cpu=native" maturin develop -r
+RUSTFLAGS="-C target-cpu=native -C llvm-args=-ffast-math -C opt-level=3" maturin develop -r
 ```
