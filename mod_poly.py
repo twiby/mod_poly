@@ -25,4 +25,10 @@ if __name__ == "__main__":
 	print(poly_1 + poly_2)
 	print(poly_1 * poly_2)
 
+	m1 = pa.Matrix([(1,0), (0,2), (1,1), (1,1), (1,0), (0,2)], 2, 3)
+	m2 = pa.Matrix([(1,0), (0,2), (1,1), (1,1), (1,0), (0,2)], 3, 2)
+	print(m1)
+	print(m1 + m1)
+	print(m1 * m2)
+
 	bench_polynomial_product(30000)

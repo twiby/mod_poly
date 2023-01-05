@@ -9,7 +9,7 @@ use crate::polynomial::{ModularArithmeticPolynomial, ModularArithmeticError};
 use std::ops::{Add, Mul, Index, IndexMut};
 
 /// We define the trait representing the minimum operations necessary to build a matrix out if it
-pub trait MatrixInput: Clone {}
+pub trait MatrixInput: Clone + std::fmt::Display {}
 impl MatrixInput for f32 {}
 
 /// We define all our error types here
@@ -32,6 +32,30 @@ pub struct Matrix<T> {
 	arr: Vec<T>,
 	cols: usize,
 	rows: usize
+}
+
+/// Implement the Display trait
+impl<T: MatrixInput> std::fmt::Display for Matrix<T> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let mut ret = "[".to_string();
+
+		for x in 0..self.rows {
+			ret.push('[');
+			for y in 0..self.cols-1 {
+				ret.push_str(&self[(x,y)].to_string());
+				ret.push_str(", ");
+			}
+			ret.push_str(&self[(x, self.cols-1)].to_string());
+			ret.push(']');
+			if x != self.rows-1 {
+				ret.push(',');
+				ret.push('\n');
+			}
+		}
+
+		ret.push(']');
+		f.write_str(&ret)
+	}
 }
 
 impl<T: MatrixInput> Matrix<T> {
