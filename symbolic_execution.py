@@ -275,7 +275,6 @@ def start_interface():
 			print('exit')
 			break
 		elif '=' in expression:
-			print(expression)
 			parts = expression.split('=')
 			if len(parts) != 2:
 				print("Error, try again.")
@@ -286,7 +285,6 @@ def start_interface():
 				continue
 
 			values[name] = evaluate_complex_number(parts[1])
-			print(values)
 		else:
 			try:
 				print(evaluate_complex_number(expression))

@@ -1,5 +1,8 @@
+import sys
+import argparse
 import numpy as np
 import poly_arithmetic as pa
+from symbolic_execution import start_interface
 
 def bench_polynomial_product(N = 100):
 	random_numbers = np.random.rand(N, 2)
@@ -12,49 +15,21 @@ def bench_polynomial_product(N = 100):
 
 	poly_3 = poly_1 * poly_2
 
+def main(args):
+	if args.interface:
+		start_interface()
+		sys.exit(0)
+	sys.exit(0)
 
 if __name__ == "__main__":
-	a = pa.Complex(1, 1)
-	b = pa.Complex(1, 1)
+	parser = argparse.ArgumentParser(description="Helper for complex numbers and polynomials manipulation.")
+	parser.add_argument('-i','--interface', action='store_true', help="Launches an interface for complex manipulation, ex: \"a = i+3i*5*(1+(3+6i))\" or \"a-(3+0.01*a)\"")
+	# parser.add_argument('-w','--wordCheck', type=str, help="returns all words formed with these letters")
+	# parser.add_argument('-p','--players', type=int, help="number of players")
+	# parser.add_argument('--scrabbleStats', action='store_true', help="makes stats about probability of having a scrabble")
+	# parser.add_argument('-a','--auto', action='store_true', help="launches a game with automatic players")
+	# parser.add_argument('-s','--show', action='store_true', help="shows current best word")
+	args = parser.parse_args()
+	main(args)
 
-	print(a, b)
-	print(a[0], a[1])
-	a[1] = 100
-
-	print(a + b)
-	print(a * b)
-
-	poly_1 = pa.Polynomial([pa.Complex(1,0), pa.Complex(0,2), pa.Complex(1,1)], 3)
-	poly_2 = pa.Polynomial([pa.Complex(1,1), pa.Complex(1,0), pa.Complex(0,2)], 3)
-	print()
-	print(poly_1 + poly_2)
-	print(poly_1 * poly_2)
-	poly_1[2] = pa.Complex(1,10)
-	print(poly_1[2])
-
-	m1 = pa.Matrix([pa.Complex(1,0), pa.Complex(0,2), pa.Complex(1,1), pa.Complex(1,1), pa.Complex(1,0), pa.Complex(0,2)], 2, 3)
-	m2 = pa.Matrix([pa.Complex(1,0), pa.Complex(0,2), pa.Complex(1,1), pa.Complex(1,1), pa.Complex(1,0), pa.Complex(0,2)], 3, 2)
-	print()
-	print(m1)
-	print(m1[(0,1)])
-	m1[(0,1)] = pa.Complex(1, 2)
-	print(m1[(0,1)])
-	print(m1 + m1)
-	print(m1 * m2)
-
-	a = pa.Complex(1, 0)
-	b = pa.Complex(0, 2)
-	c = pa.Complex(1, 1)
-	poly1 = pa.Polynomial([a, b, c], 3)
-	poly2 = pa.Polynomial([c, a, b], 3)
-
-	m1 = pa.PolynomialMatrix([poly1, poly2], 1, 2)
-	m2 = pa.PolynomialMatrix([poly1, poly2], 1, 2)
-	print(m1)
-	print(m1 + m2)
-	m2 = pa.PolynomialMatrix([poly1, poly1], 2, 1)
-	print(m2[(0,0)])
-	m2[(0,0)] = poly2
-	print(m1 * m2)
-
-	bench_polynomial_product(30000)
+	# bench_polynomial_product(30000)
