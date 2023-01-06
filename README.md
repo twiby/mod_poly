@@ -12,3 +12,7 @@ You must also compile and install additional software components written in Rust
 
 # Usage as a library
 the `mod_poly` subfolder is a Rust project that can be used as a crate as is. Every type is public and domcumented. It can also be used as a Python module (if compiled according to instructions found there), every type being binded to a Python equivalent. With the binding comes a small lack of generality in types. 
+
+# Usage as Python app
+The file `mod_poly.py` can also serve as an app, partly to benchmark the underlying library performance, partly to launch an interface to manipulate complex numbers.
+Use `python3 mod_poly.py --help` to get help about options.

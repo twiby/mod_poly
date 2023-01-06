@@ -169,8 +169,6 @@ class Evaluator:
 			else:
 				raise TypeError
 
-		# atomic = len(self.expressions) == 1
-
 		self.handle_subtract()
 
 		self.break_operations()
@@ -183,10 +181,6 @@ class Evaluator:
 
 		self.make_numbers()
 
-		# if atomic:
-		# 	print(Evaluator.str(self.expressions))
-		# 	print(self.evaluate())
-		# 	print()
 	def str(exp):
 		ret = ""
 		for e in exp:
