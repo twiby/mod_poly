@@ -310,9 +310,7 @@ def start_interface():
 
 if __name__ == "__main__":
 
-	# start_interface()
-	test = "(1 +i)*(((3+5 -6i) *2i)+2 *i) + 3.2i*5.1"
-	print(evaluate_complex_number(test))
+	start_interface()
 
 
 
