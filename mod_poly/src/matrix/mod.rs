@@ -76,13 +76,13 @@ impl<T: MatrixInput> Matrix<T> {
 	}
 
 	/// Creates a new matrix with the provided data (which should spans columns before rows)
-	pub fn new(arr: &[T], x: usize, y: usize) -> MatrixResult<T> {
+	pub fn new(arr: Vec<T>, x: usize, y: usize) -> MatrixResult<T> {
 		Self::check_zero_dimension(x, y)?;
 		if arr.len() != x*y {
 			return Err(MatrixError::WrongInputArraySize(format!("Wrong input size: {} instead of {}", arr.len(), x*y)));
 		}
 
-		return Ok(Self{cols: y, rows: x, arr: arr.to_vec()});
+		return Ok(Self{cols: y, rows: x, arr: arr});
 	}
 
 	#[inline]
@@ -111,6 +111,7 @@ impl<T: MatrixInput> Matrix<T> {
 		x * self.cols + y
 	}
 
+	#[allow(dead_code)]
 	fn row(&self, x: usize) -> Result<std::slice::Iter<T>, MatrixError> {
 		if x >= self.rows {
 			return Err(MatrixError::OutOfBoundsIndex(format!("x index too high: {} for size {}", x, self.rows)));
@@ -119,6 +120,7 @@ impl<T: MatrixInput> Matrix<T> {
 		Ok(self.arr[x*self.cols..(x+1)*self.cols].iter())
 	}
 
+	#[allow(dead_code)]
 	fn col(&self, y: usize) -> Result<StepBy<Skip<std::slice::Iter<T>>>, MatrixError> {
 		if y >= self.cols {
 			return Err(MatrixError::OutOfBoundsIndex(format!("y index too high: {} for size {}", y, self.cols)));

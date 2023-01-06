@@ -136,7 +136,7 @@ impl Matrix {
 	pub fn new(values: Vec<Complex>, rows: usize, cols: usize) -> PyResult<Self> {
 		let values_complex = to_internal_vector(&values);
 		Ok(Self{
-			val: matrix::Matrix::new(&values_complex, rows, cols)?
+			val: matrix::Matrix::new(values_complex, rows, cols)?
 		})
 	}
 
@@ -178,7 +178,7 @@ impl PolynomialMatrix {
 	pub fn new(values: Vec<Polynomial>, rows: usize, cols: usize) -> PyResult<Self> {
 		let values_complex = to_internal_vector(&values);
 		Ok(Self{
-			val: matrix::Matrix::new(&values_complex, rows, cols)?
+			val: matrix::Matrix::new(values_complex, rows, cols)?
 		})
 	}
 

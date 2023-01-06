@@ -8,7 +8,7 @@ fn new_empty() {
 
 #[test]
 fn new() {
-	let m = matrix::Matrix::<f32>::new(&vec![0.0,1.0,2.0,3.0,4.0,5.0], 2,3).unwrap();
+	let m = matrix::Matrix::<f32>::new(vec![0.0,1.0,2.0,3.0,4.0,5.0], 2,3).unwrap();
 	assert_eq!(m.len(), 6);
 
 	assert_eq!(m[(0,0)], 0.0);
@@ -21,7 +21,7 @@ fn new() {
 
 #[test]
 fn new_error() {
-	let e = matrix::Matrix::<f32>::new(&vec![0.0,1.0,2.0,3.0,4.0], 2,3);
+	let e = matrix::Matrix::<f32>::new(vec![0.0,1.0,2.0,3.0,4.0], 2,3);
 	match e {
 		Err(matrix::MatrixError::WrongInputArraySize(_)) => (),
 		_ => panic!("Wrong error type")
@@ -30,7 +30,7 @@ fn new_error() {
 
 #[test]
 fn new_error_empty() {
-	let e = matrix::Matrix::<f32>::new(&vec![], 2,0);
+	let e = matrix::Matrix::<f32>::new(vec![], 2,0);
 	match e {
 		Err(matrix::MatrixError::ZeroDimension(_)) => (),
 		_ => panic!("Wrong error type")
@@ -39,7 +39,7 @@ fn new_error_empty() {
 
 #[test]
 fn index_mut() {
-	let mut m = matrix::Matrix::<f32>::new(&vec![0.0,1.0,2.0,3.0,4.0,5.0], 2,3).unwrap();
+	let mut m = matrix::Matrix::<f32>::new(vec![0.0,1.0,2.0,3.0,4.0,5.0], 2,3).unwrap();
 	assert_eq!(m.len(), 6);
 	m[(1,2)] = 10.0;
 	assert_eq!(m[(1,2)], 10.0);
@@ -47,7 +47,7 @@ fn index_mut() {
 
 #[test]
 fn rows() {
-	let m = matrix::Matrix::<f32>::new(&vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0], 4,3).unwrap();
+	let m = matrix::Matrix::<f32>::new(vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0], 4,3).unwrap();
 	assert_eq!(m.row(0).unwrap().copied().collect::<Vec<f32>>(), vec![1.0, 2.0, 3.0]);
 	assert_eq!(m.row(1).unwrap().copied().collect::<Vec<f32>>(), vec![4.0, 5.0, 6.0]);
 	assert_eq!(m.row(2).unwrap().copied().collect::<Vec<f32>>(), vec![7.0, 8.0, 9.0]);
@@ -60,7 +60,7 @@ fn rows() {
 
 #[test]
 fn cols() {
-	let m = matrix::Matrix::<f32>::new(&vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0], 4,3).unwrap();
+	let m = matrix::Matrix::<f32>::new(vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0], 4,3).unwrap();
 	assert_eq!(m.col(0).unwrap().copied().collect::<Vec<f32>>(), vec![1.0, 4.0, 7.0, 10.0]);
 	assert_eq!(m.col(1).unwrap().copied().collect::<Vec<f32>>(), vec![2.0, 5.0, 8.0, 11.0]);
 	assert_eq!(m.col(2).unwrap().copied().collect::<Vec<f32>>(), vec![3.0, 6.0, 9.0, 12.0]);
@@ -77,8 +77,8 @@ fn sum() {
 	let c = complex::Complex::<f32>::new(2.0, 0.0);
 	let d = complex::Complex::<f32>::new(2.0, -2.0);
 
-	let m1 = matrix::Matrix::<complex::Complex<f32>>::new(&vec![a,b,c,d], 2, 2).unwrap();
-	let m2 = matrix::Matrix::<complex::Complex<f32>>::new(&vec![d,d,d,d], 2, 2).unwrap();
+	let m1 = matrix::Matrix::<complex::Complex<f32>>::new(vec![a,b,c,d], 2, 2).unwrap();
+	let m2 = matrix::Matrix::<complex::Complex<f32>>::new(vec![d,d,d,d], 2, 2).unwrap();
 	let m3 = (&m1 + &m2).unwrap();
 
 	assert_eq!(m3[(0,0)], complex::Complex::<f32>::new(3.0, -1.0));
@@ -106,8 +106,8 @@ fn sum_matrix_of_polynomial() {
 	let poly_1 = ModularArithmeticPolynomial::new(&Polynomial::new(&[a,b,zero]), 3);
 	let poly_2 = ModularArithmeticPolynomial::new(&Polynomial::new(&[zero,zero,c]), 3);
 
-	let m1 = matrix::Matrix::new(&vec![poly_1.clone(), poly_2], 2, 1).unwrap();
-	let m2 = matrix::Matrix::new(&vec![poly_1.clone(), poly_1], 2, 1).unwrap();
+	let m1 = matrix::Matrix::new(vec![poly_1.clone(), poly_2], 2, 1).unwrap();
+	let m2 = matrix::Matrix::new(vec![poly_1.clone(), poly_1], 2, 1).unwrap();
 	let m3 = (&m1 + &m2).unwrap();
 
 	assert_eq!(m3[(0,0)].coef(0).unwrap(), a_p_a);
@@ -125,8 +125,8 @@ fn matrix_product() {
 	let c = complex::Complex::<f32>::new(2.0, 0.0);
 	let d = complex::Complex::<f32>::new(2.0, -2.0);
 
-	let m1 = matrix::Matrix::<complex::Complex<f32>>::new(&vec![a,b,c,d], 2, 2).unwrap();
-	let m2 = matrix::Matrix::<complex::Complex<f32>>::new(&vec![a,d], 2, 1).unwrap();
+	let m1 = matrix::Matrix::<complex::Complex<f32>>::new(vec![a,b,c,d], 2, 2).unwrap();
+	let m2 = matrix::Matrix::<complex::Complex<f32>>::new(vec![a,d], 2, 1).unwrap();
 	let m3 = (&m1 * &m2).unwrap();
 
 	assert_eq!(m3.shape(), (2, 1));
@@ -160,8 +160,8 @@ fn matrix_product_polynomials() {
 	let mod_poly_1 = ModularArithmeticPolynomial::new(&Polynomial::new(&[a,b,c]), 3);
 	let mod_poly_2 = ModularArithmeticPolynomial::new(&Polynomial::new(&[c,a,b]), 3);
 
-	let m1 = matrix::Matrix::new(&vec![mod_poly_1.clone(), mod_poly_2.clone()], 1, 2).unwrap();
-	let m2 = matrix::Matrix::new(&vec![mod_poly_2, mod_poly_1], 2, 1).unwrap();
+	let m1 = matrix::Matrix::new(vec![mod_poly_1.clone(), mod_poly_2.clone()], 1, 2).unwrap();
+	let m2 = matrix::Matrix::new(vec![mod_poly_2, mod_poly_1], 2, 1).unwrap();
 
 	assert_eq!((&m2 * &m1).unwrap().shape(), (2, 2));
 
@@ -186,8 +186,8 @@ fn matrix_product_polynomials_2() {
 	let mod_poly_1 = ModularArithmeticPolynomial::new(&Polynomial::new(&[a,b,c]), 3);
 	let mod_poly_2 = ModularArithmeticPolynomial::new(&Polynomial::new(&[c,a,b]), 3);
 
-	let m1 = matrix::Matrix::new(&vec![mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone()], 2, 2).unwrap();
-	let m2 = matrix::Matrix::new(&vec![mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone()], 2, 2).unwrap();
+	let m1 = matrix::Matrix::new(vec![mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone()], 2, 2).unwrap();
+	let m2 = matrix::Matrix::new(vec![mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone()], 2, 2).unwrap();
 
 	let _ = (&m1 * &m2).unwrap();
 }
@@ -203,8 +203,8 @@ fn matrix_product_polynomials_error() {
 	let mod_poly_1 = ModularArithmeticPolynomial::new(&Polynomial::new(&[a,b,c]), 3);
 	let mod_poly_2 = ModularArithmeticPolynomial::new(&Polynomial::new(&[c,a,b]), 3);
 
-	let m1 = matrix::Matrix::new(&vec![mod_poly_1.clone(), mod_poly_2.clone()], 2, 1).unwrap();
-	let m2 = matrix::Matrix::new(&vec![mod_poly_2, mod_poly_1], 2, 1).unwrap();
+	let m1 = matrix::Matrix::new(vec![mod_poly_1.clone(), mod_poly_2.clone()], 2, 1).unwrap();
+	let m2 = matrix::Matrix::new(vec![mod_poly_2, mod_poly_1], 2, 1).unwrap();
 
 	match &m1 * &m2 {
 		Err(matrix::MatrixError::UncompatibleMatrixShapes(_)) => (),
