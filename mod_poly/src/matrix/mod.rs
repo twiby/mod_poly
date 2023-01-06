@@ -3,6 +3,7 @@
 #[cfg(test)]
 mod test;
 
+use crate::complex;
 use crate::complex::Number;
 use crate::polynomial::{ModularArithmeticPolynomial, ModularArithmeticError};
 
@@ -190,7 +191,8 @@ impl<'a, T: MatrixInput + Number> Mul for &'a Matrix<T> {
 
 /// Mul operation for Polynomials, which don't have the Copy trait, and thus add by reference
 /// In addition, this allows catching any error coming from the modular Arithmetic module
-impl<'a, T: Number> Mul for &'a Matrix<ModularArithmeticPolynomial<T>> {
+impl<'a, T> Mul for &'a Matrix<ModularArithmeticPolynomial<T>> 
+where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
 	type Output = MatrixResult<ModularArithmeticPolynomial<T>>;
 
 	fn mul(self, other: &'a Matrix<ModularArithmeticPolynomial<T>>) -> MatrixResult<ModularArithmeticPolynomial<T>> {

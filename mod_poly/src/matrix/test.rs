@@ -109,6 +109,21 @@ fn matrix_product() {
 	assert_eq!(m3[(1,0)], complex::Complex::<f32>::new(2.0, -6.0));
 }
 
+fn nearly_equal_f32(a: f32, b: f32) -> bool {
+	let abs_a = a.abs();
+	let abs_b = b.abs();
+	let diff = (a - b).abs();
+
+	if a == b { // Handle infinities.
+		true
+	} else if a == 0.0 || b == 0.0 || diff < f32::MIN_POSITIVE {
+		// One of a or b is zero (or both are extremely close to it,) use absolute error.
+		diff < f32::EPSILON
+	} else { // Use relative error.
+		(diff / f32::min(abs_a + abs_b, f32::MAX)) < f32::EPSILON
+	}
+}
+
 #[test]
 fn matrix_product_polynomials() {
 	// P1(x) = 1 + 2i*x + (1 + i)*x²
@@ -129,9 +144,12 @@ fn matrix_product_polynomials() {
 
 	assert_eq!(m3.shape(), (1, 1));
 	assert_eq!(m3[(0,0)].modulus(), 3);
-	assert_eq!(m3[(0,0)].coef(0).unwrap(), complex::Complex::<f32>::new(-4.0, 4.0));
-	assert_eq!(m3[(0,0)].coef(1).unwrap(), complex::Complex::<f32>::new(-6.0, 8.0));
-	assert_eq!(m3[(0,0)].coef(2).unwrap(), complex::Complex::<f32>::new(0.0, 12.0));
+	assert!(nearly_equal_f32(m3[(0,0)].coef(0).unwrap().real(), -4.0));
+	assert!(nearly_equal_f32(m3[(0,0)].coef(1).unwrap().real(), -6.0));
+	assert!(nearly_equal_f32(m3[(0,0)].coef(2).unwrap().real(), 0.0));
+	assert!(nearly_equal_f32(m3[(0,0)].coef(0).unwrap().imag(), 4.0));
+	assert!(nearly_equal_f32(m3[(0,0)].coef(1).unwrap().imag(), 8.0));
+	assert!(nearly_equal_f32(m3[(0,0)].coef(2).unwrap().imag(), 12.0));
 }
 
 #[test]

@@ -178,6 +178,21 @@ fn add_assign_mod_polynomial_error() {
 	sum += &mod_poly_6;
 }
 
+fn nearly_equal_f32(a: f32, b: f32) -> bool {
+	let abs_a = a.abs();
+	let abs_b = b.abs();
+	let diff = (a - b).abs();
+
+	if a == b { // Handle infinities.
+		true
+	} else if a == 0.0 || b == 0.0 || diff < f32::MIN_POSITIVE {
+		// One of a or b is zero (or both are extremely close to it,) use absolute error.
+		diff < f32::EPSILON
+	} else { // Use relative error.
+		(diff / f32::min(abs_a + abs_b, f32::MAX)) < f32::EPSILON
+	}
+}
+
 #[test]
 fn mult_mod_polynomial() {
 	// P1(x) = 1 + 2i*x + (1 + i)*x²
@@ -194,7 +209,46 @@ fn mult_mod_polynomial() {
 
 	let prod = (&mod_poly_1 * &mod_poly_2).expect("");
 	assert_eq!(prod.polynomial.coefs.len(), 3);
-	assert_eq!(prod.polynomial.coefs[0], Complex::<f32>::new(-2.0, 2.0));
-	assert_eq!(prod.polynomial.coefs[1], Complex::<f32>::new(-3.0, 4.0));
-	assert_eq!(prod.polynomial.coefs[2], Complex::<f32>::new(0.0, 6.0));
+	assert!(nearly_equal_f32(prod.polynomial.coefs[0].real(), -2.0));
+	assert!(nearly_equal_f32(prod.polynomial.coefs[1].real(), -3.0));
+	assert!(nearly_equal_f32(prod.polynomial.coefs[2].real(), 0.0));
+	assert!(nearly_equal_f32(prod.polynomial.coefs[0].imag(), 2.0));
+	assert!(nearly_equal_f32(prod.polynomial.coefs[1].imag(), 4.0));
+	assert!(nearly_equal_f32(prod.polynomial.coefs[2].imag(), 6.0));
+}
+
+#[test]
+fn mult_mod_polynomial_f64() {
+	// P1(x) = 1 + 2x + x²
+	// P2(x) = 1 + x + 2x²
+
+	let mod_poly_1 = ModularArithmeticPolynomial::<f64>::new(&Polynomial::new(&[1.0,2.0,1.0]), 3);
+	let mod_poly_2 = ModularArithmeticPolynomial::<f64>::new(&Polynomial::new(&[1.0,1.0,2.0]), 3);
+
+	assert_eq!(mod_poly_1.apply(1.0), 4.0);
+	assert_eq!(mod_poly_2.apply(1.0), 4.0);
+
+	let prod = (&mod_poly_1 * &mod_poly_2).expect("");
+	assert_eq!(prod.polynomial.coefs.len(), 3);
+	assert_eq!(prod.polynomial.coefs[0], 6.0);
+	assert_eq!(prod.polynomial.coefs[1], 5.0);
+	assert_eq!(prod.polynomial.coefs[2], 5.0);
+}
+
+#[test]
+fn mult_mod_polynomial_f32() {
+	// P1(x) = 1 + 2x + x²
+	// P2(x) = 1 + x + 2x²
+
+	let mod_poly_1 = ModularArithmeticPolynomial::<f32>::new(&Polynomial::new(&[1.0,2.0,1.0]), 3);
+	let mod_poly_2 = ModularArithmeticPolynomial::<f32>::new(&Polynomial::new(&[1.0,1.0,2.0]), 3);
+
+	assert_eq!(mod_poly_1.apply(1.0), 4.0);
+	assert_eq!(mod_poly_2.apply(1.0), 4.0);
+
+	let prod = (&mod_poly_1 * &mod_poly_2).expect("");
+	assert_eq!(prod.polynomial.coefs.len(), 3);
+	assert_eq!(prod.polynomial.coefs[0], 6.0);
+	assert_eq!(prod.polynomial.coefs[1], 5.0);
+	assert_eq!(prod.polynomial.coefs[2], 5.0);
 }

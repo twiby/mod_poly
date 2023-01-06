@@ -6,8 +6,10 @@
 mod test;
 
 pub mod convolution;
-use convolution::convolution_for_polynomial_mult_in_modular_arithmetic as convolution;
+// use convolution::convolution_for_polynomial_mult_in_modular_arithmetic as convolution;
+use convolution::convolution_via_fft as convolution;
 
+use crate::complex;
 use crate::complex::Number;
 
 use std::ops::{Add, AddAssign, Mul};
@@ -232,7 +234,8 @@ impl<'a, T: Number> AddAssign<&'a ModularArithmeticPolynomial<T>> for ModularAri
 /// This operation runs on references to avoid borrowing values (since Polynomial 
 /// doesn't implement the Copy trait). This returns a Result because there potentially 
 /// could be a mismatch of moduli between the two polynomials.
-impl<'a, T: Number> Mul for &'a ModularArithmeticPolynomial<T> {
+impl<'a, T> Mul for &'a ModularArithmeticPolynomial<T> 
+where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
 	type Output = ModularArithmeticResult<T>;
 
 	fn mul(self, other: &'a ModularArithmeticPolynomial<T>) -> ModularArithmeticResult<T> {
@@ -240,8 +243,10 @@ impl<'a, T: Number> Mul for &'a ModularArithmeticPolynomial<T> {
 
 		let convolution = convolution(&self.polynomial.coefs, &other.polynomial.coefs);
 
+		let converted_coefs = convolution.iter().map(|x| T::from(*x)).collect::<Vec<T>>();
+
 		Ok(ModularArithmeticPolynomial::<T>::new(
-			&Polynomial::<T>::new(&convolution),
+			&Polynomial::<T>::new(&converted_coefs),
 			self.modulus()
 		))
 	}

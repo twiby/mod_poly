@@ -15,7 +15,7 @@ pub const I_F64: Complex::<f64> = Complex{r: 0.0, i: 1.0};
 /// Custom trait for what can be a number (real or complex)
 pub trait Number: 
 	Copy + std::fmt::Debug + std::fmt::Display + PartialEq + From<f32> + 
-	AddAssign + MulAssign + Add<Output = Self> + Mul<Output = Self> {}
+	AddAssign + MulAssign + Add<Output = Self> + Mul<Output = Self> + Sub<Output = Self> {}
 /// Custom trait for what can be a real number
 pub trait RealNumber: 
 	Copy + std::fmt::Debug + std::fmt::Display + PartialEq + From<f32> +  
@@ -96,11 +96,50 @@ impl<T: RealNumber> From<f32> for Complex<T> {
 	}
 }
 
+/// Constructor from f64, specifically needed for fft
+impl From<f64> for Complex<f64> {
+	fn from(t: f64) -> Self {
+		Self::new(t, 0.0)
+	}
+}
+/// Constructor from Complex<f32>, specifically needed for fft
+impl From<Complex<f32>> for Complex<f64> {
+	fn from(t: Complex<f32>) -> Self {
+		Self::new(t.r.into(), t.i.into())
+	}
+}
+/// Constructor from Complex<f64>, specifically needed for fft
+impl From<Complex<f64>> for Complex<f32> {
+	fn from(t: Complex<f64>) -> Self {
+		Self::new(t.r as f32, t.i as f32)
+	}
+}
+/// Constructor from Complex<f64>, specifically needed for fft
+impl From<Complex<f64>> for f64 {
+	fn from(t: Complex<f64>) -> Self {
+		t.r
+	}
+}
+/// Constructor from Complex<f64>, specifically needed for fft
+impl From<Complex<f64>> for f32 {
+	fn from(t: Complex<f64>) -> Self {
+		t.r as f32
+	}
+}
+
 impl<T: RealNumber> Add for Complex<T> {
 	type Output = Complex<T>;
 
 	fn add(self, other: Complex<T>) -> Self {
 		Self{r: self.r + other.r, i: self.i + other.i}
+	}
+}
+
+impl<T: RealNumber> Sub for Complex<T> {
+	type Output = Complex<T>;
+
+	fn sub(self, other: Complex<T>) -> Self {
+		Self{r: self.r - other.r, i: self.i - other.i}
 	}
 }
 
