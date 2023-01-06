@@ -46,6 +46,31 @@ fn index_mut() {
 }
 
 #[test]
+fn rows() {
+	let m = matrix::Matrix::<f32>::new(&vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0], 4,3).unwrap();
+	assert_eq!(m.row(0).unwrap().copied().collect::<Vec<f32>>(), vec![1.0, 2.0, 3.0]);
+	assert_eq!(m.row(1).unwrap().copied().collect::<Vec<f32>>(), vec![4.0, 5.0, 6.0]);
+	assert_eq!(m.row(2).unwrap().copied().collect::<Vec<f32>>(), vec![7.0, 8.0, 9.0]);
+	assert_eq!(m.row(3).unwrap().copied().collect::<Vec<f32>>(), vec![10.0, 11.0, 12.0]);
+	match m.row(4) {
+		Err(matrix::MatrixError::OutOfBoundsIndex(_)) => (),
+		_ => panic!("Wrong error type")
+	}
+}
+
+#[test]
+fn cols() {
+	let m = matrix::Matrix::<f32>::new(&vec![1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0], 4,3).unwrap();
+	assert_eq!(m.col(0).unwrap().copied().collect::<Vec<f32>>(), vec![1.0, 4.0, 7.0, 10.0]);
+	assert_eq!(m.col(1).unwrap().copied().collect::<Vec<f32>>(), vec![2.0, 5.0, 8.0, 11.0]);
+	assert_eq!(m.col(2).unwrap().copied().collect::<Vec<f32>>(), vec![3.0, 6.0, 9.0, 12.0]);
+	match m.col(3) {
+		Err(matrix::MatrixError::OutOfBoundsIndex(_)) => (),
+		_ => panic!("Wrong error type")
+	}
+}
+
+#[test]
 fn sum() {
 	let a = complex::Complex::<f32>::new(1.0, 1.0);
 	let b = complex::Complex::<f32>::new(0.0, 1.0);
@@ -150,6 +175,21 @@ fn matrix_product_polynomials() {
 	assert!(nearly_equal_f32(m3[(0,0)].coef(0).unwrap().imag(), 4.0));
 	assert!(nearly_equal_f32(m3[(0,0)].coef(1).unwrap().imag(), 8.0));
 	assert!(nearly_equal_f32(m3[(0,0)].coef(2).unwrap().imag(), 12.0));
+}
+
+#[test]
+fn matrix_product_polynomials_2() {
+	let a = complex::Complex::<f32>::from(1.0);
+	let b = complex::I_F32 * complex::Complex::<f32>::from(2.0);
+	let c = complex::Complex::new(1.0, 1.0);
+
+	let mod_poly_1 = ModularArithmeticPolynomial::new(&Polynomial::new(&[a,b,c]), 3);
+	let mod_poly_2 = ModularArithmeticPolynomial::new(&Polynomial::new(&[c,a,b]), 3);
+
+	let m1 = matrix::Matrix::new(&vec![mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone()], 2, 2).unwrap();
+	let m2 = matrix::Matrix::new(&vec![mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone()], 2, 2).unwrap();
+
+	let _ = (&m1 * &m2).unwrap();
 }
 
 #[test]

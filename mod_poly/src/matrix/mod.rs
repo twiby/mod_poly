@@ -8,6 +8,7 @@ use crate::complex::Number;
 use crate::polynomial::{ModularArithmeticPolynomial, ModularArithmeticError};
 
 use std::ops::{Add, Mul, Index, IndexMut};
+use std::iter::{Skip, StepBy};
 
 /// We define the trait representing the minimum operations necessary to build a matrix out if it
 pub trait MatrixInput: Clone + std::fmt::Display {}
@@ -108,6 +109,22 @@ impl<T: MatrixInput> Matrix<T> {
 	#[inline]
 	fn idx(&self, x: usize, y: usize) -> usize {
 		x * self.cols + y
+	}
+
+	fn row(&self, x: usize) -> Result<std::slice::Iter<T>, MatrixError> {
+		if x >= self.rows {
+			return Err(MatrixError::OutOfBoundsIndex(format!("x index too high: {} for size {}", x, self.rows)));
+		}
+
+		Ok(self.arr[x*self.cols..(x+1)*self.cols].iter())
+	}
+
+	fn col(&self, y: usize) -> Result<StepBy<Skip<std::slice::Iter<T>>>, MatrixError> {
+		if y >= self.cols {
+			return Err(MatrixError::OutOfBoundsIndex(format!("y index too high: {} for size {}", y, self.cols)));
+		}
+
+		Ok(self.arr.iter().skip(y).step_by(self.cols))
 	}
 }
 
