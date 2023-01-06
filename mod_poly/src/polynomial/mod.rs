@@ -228,8 +228,10 @@ impl<'a, T: Number> AddAssign<&'a ModularArithmeticPolynomial<T>> for ModularAri
 
 /// The Mul operation for polynomials references in a modular arithmetic.
 ///
-/// This is equivalent to a convolution of the coefficient reresentation of the polynoms, and is thus O(n²)
-/// in the naive approach, implemented here.
+/// This is equivalent to a convolution of the coefficient reresentation of the polynoms. For low degrees, this
+/// uses a naive convolution implementation, with complexity O(n²). For higher degrees it applies FFT to the 
+/// coefficient representation of the polynoms to turn the convolution into a dot product, and the complexity
+/// is then O(nlog(n))
 ///
 /// This operation runs on references to avoid borrowing values (since Polynomial 
 /// doesn't implement the Copy trait). This returns a Result because there potentially 

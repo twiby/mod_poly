@@ -295,7 +295,7 @@ def start_interface():
 			if len(parts) != 2:
 				print("Error, try again.")
 
-			name = remove_all_spaces(parts[0])
+			name = "".join(parts[0].split(" "))
 			if not name.isalpha():
 				print("Names must have only letters")
 				continue
