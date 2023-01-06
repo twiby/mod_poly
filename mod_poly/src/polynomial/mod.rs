@@ -7,7 +7,7 @@ mod test;
 
 pub mod convolution;
 // use convolution::convolution_for_polynomial_mult_in_modular_arithmetic as convolution;
-use convolution::convolution_via_fft as convolution;
+use convolution::convolution as convolution;
 
 use crate::complex;
 use crate::complex::Number;
@@ -243,10 +243,8 @@ where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
 
 		let convolution = convolution(&self.polynomial.coefs, &other.polynomial.coefs);
 
-		let converted_coefs = convolution.iter().map(|x| T::from(*x)).collect::<Vec<T>>();
-
 		Ok(ModularArithmeticPolynomial::<T>::new(
-			&Polynomial::<T>::new(&converted_coefs),
+			&Polynomial::<T>::new(&convolution),
 			self.modulus()
 		))
 	}

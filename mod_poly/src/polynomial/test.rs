@@ -252,3 +252,27 @@ fn mult_mod_polynomial_f32() {
 	assert_eq!(prod.polynomial.coefs[1], 5.0);
 	assert_eq!(prod.polynomial.coefs[2], 5.0);
 }
+
+use crate::polynomial::convolution::{convolution_via_fft, naive_convolution};
+
+#[test]
+fn convolution_via_fft_test() {
+	const N: usize = 100;
+
+	let mut a = Vec::<f32>::with_capacity(N);
+	let mut b = Vec::<f32>::with_capacity(N);
+
+	for i in 0..N {
+		a.push(i as f32);
+		b.push((N-i) as f32);
+	}
+
+	let conv_classic = naive_convolution(&a, &b);
+	let conv_fft = convolution_via_fft(&a, &b);
+
+	assert_eq!(conv_classic.len(), conv_fft.len());
+
+	for i in 0..conv_classic.len() {
+		assert!(nearly_equal_f32(conv_fft[i], conv_classic[i]));
+	}
+}
