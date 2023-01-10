@@ -9,7 +9,7 @@ use std::ops::{AddAssign, Mul};
 /// personal computer.
 pub fn convolution<T>(a: &Vec<T>, b: &Vec<T>) -> Vec<T>
 where T: Clone + Copy + From<f32> + AddAssign + Mul<Output = T> + From<complex::Complex<f64>>, FftComplex: From<T> {
-	if a.len() > 350 {
+	if a.len() > 130 {
 		return convolution_via_fft(a, b);
 	} else {
 		return convolution_for_polynomial_mult_in_modular_arithmetic(a, b);
