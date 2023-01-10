@@ -113,6 +113,10 @@ fn _convolution_via_fft(a: &Vec<FftComplex>, b: &Vec<FftComplex>) -> Vec<FftComp
 		return vec![a[0] * b[0]];
 	}
 
+	// Allocating buffer for fft signal
+	let mut a_fft = vec![FftComplex::from(0.0); a.len()];
+	let mut b_fft = vec![FftComplex::from(0.0); b.len()];
+
 	// This weird resorting allows separating even and odd indexed values of "a" via slice manipulation
 	let indices = oddeven_sort(a.len());
 	let sorted_a: Vec<FftComplex> = indices.iter().map(|n| a[*n]).collect();
@@ -120,16 +124,17 @@ fn _convolution_via_fft(a: &Vec<FftComplex>, b: &Vec<FftComplex>) -> Vec<FftComp
 
 	let mut roots = get_roots_of_unity(a.len());
 
-	let a_ft = _fft_forward(&sorted_a, &roots);
-	let b_ft = _fft_forward(&sorted_b, &roots);
+	_fft_forward(&sorted_a, &roots, &mut a_fft);
+	_fft_forward(&sorted_b, &roots, &mut b_fft);
 
 	// The term by term product in Fourier space is equivalent to the convolution in the vector space
-	let prod: Vec<FftComplex> = a_ft.iter().zip(b_ft.iter()).map(|(x, y)| *x * *y).collect();
+	let prod: Vec<FftComplex> = a_fft.iter().zip(b_fft.iter()).map(|(x, y)| *x * *y).collect();
 
 	// Again resorting to easily separate odd and even-indexed values
 	let sorted_prod: Vec<FftComplex> = indices.iter().map(|n| prod[*n]).collect();
 
-	return _fft_backward(&sorted_prod, &mut roots);
+	_fft_backward(&sorted_prod, &mut roots, &mut a_fft);
+	return a_fft;
 }
 
 fn next_power_of_2(mut num: usize) -> usize {
@@ -181,61 +186,56 @@ fn get_roots_of_unity(size: usize) -> Vec<FftComplex> {
 	return roots;
 }
 
-fn _fft_forward(a: &[FftComplex], roots: &[FftComplex]) -> Vec<FftComplex> {
-	_fft(a, &roots).unwrap()
+fn _fft_forward(a: &[FftComplex], roots: &[FftComplex], dst: &mut Vec<FftComplex>) {
+	_fft(a, &roots, dst);
 }
-fn _fft_backward(a: &[FftComplex], roots: &mut [FftComplex]) -> Vec<FftComplex> {
+fn _fft_backward(a: &[FftComplex], roots: &mut [FftComplex], dst: &mut Vec<FftComplex>) {
 	// We must change the sign of the imaginary part of roots to define them of the bottom circle	
 	for val in roots.into_iter() {
 		*val = FftComplex::new(val.real(), -val.imag());
 	}
 
 	// Compute backward fft
-	let mut y = _fft(a, &roots).unwrap();
+	_fft(a, &roots, dst);
 
 	// Apply scaling
 	let size_f = a.len() as f64;
 	let size_inverse = FftComplex::from(1.0 / size_f);
-	for coef in &mut y {
+	for coef in dst {
 		*coef *= size_inverse;
 	}
-
-	return y;
 }
 
-fn _fft(a: &[FftComplex], roots: &[FftComplex]) -> Option<Vec<FftComplex>> {
+fn _fft(a: &[FftComplex], roots: &[FftComplex], dst: &mut [FftComplex]) {
 	let size = a.len();
 	let half_size = size >> 1;
 
 	// Recursion end
 	if size == 1 {
-		return Some(vec![FftComplex::from(a[0])]);
+		dst[0] = a[0];
+		return;
 	}
 
 	// Size must be a power of 2 every step of the way
 	if (size & (size - 1)) != 0 {
-		return None;
+		panic!("FFT: size is not a power of 2");
 	}
 
 	// Get our stride to access roots of unity
 	let roots_stride: usize = roots.len() / half_size;
 
 	// Recursive call
-	let y_even = _fft(&a[..half_size], roots).unwrap();
-	let y_odd = _fft(&a[half_size..], roots).unwrap();
+	_fft(&a[..half_size], roots, &mut dst[..half_size]);
+	_fft(&a[half_size..], roots, &mut dst[half_size..]);
 
 	// Extract actual resulting array
-	let mut y = vec![FftComplex::from(0.0); size];
-
 	for i in 0..half_size {
-		let odd_term = roots[i * roots_stride] * y_odd[i];
-		let even_term = y_even[i];
+		let odd_term = roots[i * roots_stride] * dst[half_size + i];
+		let even_term = dst[i];
 
-		y[i] = even_term + odd_term;
-		y[i + half_size] = even_term - odd_term;
+		dst[i] += odd_term;
+		dst[i + half_size] = even_term - odd_term;
 	}
-
-	return Some(y);
 }
 
 fn oddeven_sort(size: usize) -> Vec<usize> {
