@@ -118,7 +118,8 @@ fn _convolution_via_fft(a: &Vec<FftComplex>, b: &Vec<FftComplex>) -> Vec<FftComp
 	let mut b_fft = vec![FftComplex::from(0.0); b.len()];
 
 	// This weird resorting allows separating even and odd indexed values of "a" via slice manipulation
-	let indices = oddeven_sort(a.len());
+	let mut indices = vec![0; a.len()];
+	oddeven_sort(a.len(), &mut indices);
 	let sorted_a: Vec<FftComplex> = indices.iter().map(|n| a[*n]).collect();
 	let sorted_b: Vec<FftComplex> = indices.iter().map(|n| b[*n]).collect();
 
@@ -238,26 +239,22 @@ fn _fft(a: &[FftComplex], roots: &[FftComplex], dst: &mut [FftComplex]) {
 	}
 }
 
-fn oddeven_sort(size: usize) -> Vec<usize> {
+fn oddeven_sort(size: usize, indices: &mut [usize]) {
 	// Size must be a power of 2 every step of the way
 	if (size & (size - 1)) != 0 || size == 0 {
 		panic!();
 	}
 
 	if size == 1 {
-		return vec![0];
-	} else if size == 2 {
-		return vec![0, 1];
-	} else {
-		let half_size = size >> 1;
-		let previous = oddeven_sort(half_size);
-		let mut ret = Vec::<usize>::with_capacity(size);
+		indices[0] = 0;
+		return;
+	}
+	
+	let half_size = size >> 1;
+	oddeven_sort(half_size, &mut indices[..half_size]);
 
-		for i in 0..half_size {
-			ret.push(previous[i]);
-			ret.push(previous[i] + half_size);
-		}
-
-		return ret;
+	for i in 0..half_size {
+		indices[i] <<= 1;
+		indices[i+half_size] = indices[i] + 1;
 	}
 }
