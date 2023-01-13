@@ -229,8 +229,7 @@ fn _fft(a: &[FftComplex], roots: &[FftComplex], dst: &mut [FftComplex]) {
 	let mut half_step = 1;
 	let mut roots_stride = size >> 1;
 	while step <= size {
-		for sub_fft_offset in (0..size).step_by(step) {
-			let sub_fft = &mut dst[sub_fft_offset..(sub_fft_offset+step)];
+		for sub_fft in dst.chunks_mut(step) {
 			for i in 0..half_step {
 				let odd_term = roots[i * roots_stride] * sub_fft[half_step + i];
 				let even_term = sub_fft[i];
