@@ -154,42 +154,18 @@ fn next_power_of_2(mut num: usize) -> usize {
 
 /// Returns roots of unity contained in the upper trig circle
 fn get_roots_of_unity(size: usize) -> Vec<FftComplex> {
-	if size == 1 {
-		return vec![FftComplex::from(1.0)];
-	} else if size == 2 {
-		return vec![FftComplex::from(1.0)];
-	} else if size == 4 {
-		return vec![FftComplex::from(1.0), FftComplex::new(0.0, 1.0)];
-	} else {
-		let half_size = size >> 1;
-		let quarter_size = half_size >> 1;
-		let eigth_size = quarter_size >> 1;
+	let half_size = size >> 1;
 
-		// 2pi / n
-		let theta = 2.0 * std::f64::consts::PI / (size as f64);
+	let theta = 2.0 * std::f64::consts::PI / (size as f64);
+	let first_root = FftComplex::new(theta.cos(), theta.sin());
 
-		// Store half of all nth root of unity
-		let mut roots = Vec::<FftComplex>::with_capacity(half_size);
+	let mut roots = vec![FftComplex::from(1.0); half_size];
 
-		// Compute cos and sin on an eigth circle
-		let mut current_angle:f64 = 0.0;
-		for _ in 0..(eigth_size+1) {
-			roots.push(FftComplex::new(current_angle.cos(), current_angle.sin()));
-			current_angle += theta;
-		}
-
-		// Deduce cos and sin on the second eigth circle
-		for j in (0..eigth_size).rev() {
-			roots.push(FftComplex::new(roots[j].imag(), roots[j].real()));
-		}
-
-		// Deduce cos and sin on the second quarter circle
-		for i in 1..quarter_size {
-			roots.push(FftComplex::new(-roots[i].imag(), roots[i].real()));
-		}
-
-		return roots;
+	for i in 1..half_size {
+		roots[i] = roots[i-1] * first_root;
 	}
+
+	return roots;
 }
 
 fn _fft_forward(a: &[FftComplex], roots: &[FftComplex], dst: &mut Vec<FftComplex>) {
