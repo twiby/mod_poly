@@ -209,7 +209,6 @@ fn _fft_backward(a: &[FftComplex], roots: &mut [FftComplex], dst: &mut Vec<FftCo
 
 fn _fft(a: &[FftComplex], roots: &[FftComplex], dst: &mut [FftComplex]) {
 	let size = a.len();
-	let half_size = size >> 1;
 
 	// Recursion end
 	if size == 1 {
@@ -222,20 +221,26 @@ fn _fft(a: &[FftComplex], roots: &[FftComplex], dst: &mut [FftComplex]) {
 		panic!("FFT: size is not a power of 2");
 	}
 
-	// Get our stride to access roots of unity
-	let roots_stride: usize = roots.len() / half_size;
+	for i in 0..size {
+		dst[i] = a[i];
+	}
+	
+	let mut step = 2;
+	let mut half_step = 1;
+	while step <= size {
+		for sub_fft_offset in (0..size).step_by(step) {
+			let roots_stride: usize = roots.len() / half_step;
+			let sub_fft = &mut dst[sub_fft_offset..(sub_fft_offset+step)];
+			for i in 0..half_step {
+				let odd_term = roots[i * roots_stride] * sub_fft[half_step + i];
+				let even_term = sub_fft[i];
 
-	// Recursive call
-	_fft(&a[..half_size], roots, &mut dst[..half_size]);
-	_fft(&a[half_size..], roots, &mut dst[half_size..]);
-
-	// Extract actual resulting array
-	for i in 0..half_size {
-		let odd_term = roots[i * roots_stride] * dst[half_size + i];
-		let even_term = dst[i];
-
-		dst[i] += odd_term;
-		dst[i + half_size] = even_term - odd_term;
+				sub_fft[i] += odd_term;
+				sub_fft[i + half_step] = even_term - odd_term;		
+			}
+		}
+		half_step <<= 1;
+		step <<= 1;
 	}
 }
 
