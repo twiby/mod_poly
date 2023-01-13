@@ -191,10 +191,18 @@ fn _fft_backward(a: &[FftComplex], roots: &mut [FftComplex], dst: &mut Vec<FftCo
 fn _fft(a: &[FftComplex], roots: &[FftComplex], dst: &mut [FftComplex]) {
 	let size = a.len();
 
-	// Recursion end
+	// Quick exit
 	if size == 1 {
 		dst[0] = a[0];
 		return;
+	} else if size == 2 {
+		dst[0] = a[0] + a[1];
+		dst[1] = a[0] - a[1];
+	} else if size == 4 {
+		dst[0] = a[0] + a[1] + a[2] + a[3];
+		dst[2] = a[0] + a[1] - a[2] - a[3];
+		dst[1] = a[0] - a[1] + roots[1] * (a[2] - a[3]);
+		dst[3] = a[0] - a[1] - roots[1] * (a[2] - a[3]);		
 	}
 
 	// Size must be a power of 2 every step of the way
@@ -202,21 +210,22 @@ fn _fft(a: &[FftComplex], roots: &[FftComplex], dst: &mut [FftComplex]) {
 		panic!("FFT: size is not a power of 2");
 	}
 
-	for i in 0..size {
-		dst[i] = a[i];
+	for i in (0..size).step_by(4) {
+		dst[i] = a[i] + a[i+1] + a[i+2] + a[i+3];
+		dst[i+2] = a[i] + a[i+1] - a[i+2] - a[i+3];
+		dst[i+1] = a[i] - a[i+1] + roots[roots.len()>>1] * (a[i+2] - a[i+3]);
+		dst[i+3] = a[i] - a[i+1] - roots[roots.len()>>1] * (a[i+2] - a[i+3]);
 	}
 	
-	let mut step = 2;
-	let mut half_step = 1;
-	let mut roots_stride = size >> 1;
+	let mut step = 8;
+	let mut half_step = step >> 1;
+	let mut roots_stride = size >> 3;
 	while step <= size {
 		for sub_fft in dst.chunks_mut(step) {
 			for i in 0..half_step {
 				let odd_term = roots[i * roots_stride] * sub_fft[half_step + i];
-				let even_term = sub_fft[i];
-
+				sub_fft[i + half_step] = sub_fft[i] - odd_term;		
 				sub_fft[i] += odd_term;
-				sub_fft[i + half_step] = even_term - odd_term;		
 			}
 		}
 		half_step <<= 1;
