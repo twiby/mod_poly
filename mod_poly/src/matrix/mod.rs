@@ -129,6 +129,16 @@ impl<T: MatrixInput> Matrix<T> {
 
 		Ok(self.arr.iter().skip(y).step_by(self.cols))
 	}
+
+	fn clone_transposed(&self) -> Matrix<T> {
+		let mut arr = Vec::<T>::with_capacity(self.len());
+		for y in 0..self.cols {
+			for x in 0..self.rows {
+				arr.push(self[(x,y)].clone());
+			}
+		}
+		Self::new(arr, self.cols, self.rows).unwrap()
+	}
 }
 
 impl<T: MatrixInput> Index<(usize, usize)> for Matrix<T> {

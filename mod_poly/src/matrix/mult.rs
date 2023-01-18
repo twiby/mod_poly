@@ -16,17 +16,20 @@ impl<'a, T: MatrixInput + Number> Mul for &'a Matrix<T> {
 			));
 		}
 
-		let mut m = Matrix::<T>::new_empty(self.rows, other.cols, T::from(0.0)).unwrap();
+		let other_transposed = other.clone_transposed();
+		let mut coefs = Vec::<T>::with_capacity(self.rows * other.cols);
 
 		for x in 0..self.rows {
 			for y in 0..other.cols {
-				for i in 0..self.cols {
-					m[(x,y)] += self[(x, i)] * other[(i, y)];
+				let mut coef = T::from(0.0);
+				for (a,b) in self.row(x)?.zip(other_transposed.row(y)?) {
+					coef += *a * *b;
 				}
+				coefs.push(coef);
 			}
 		}
 
-		Ok(m)
+		Matrix::<T>::new(coefs, self.rows, other.cols)
 	}
 }
 
@@ -43,17 +46,21 @@ where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
 			));
 		}
 
+		let other_transposed = other.clone_transposed();
+
 		let modulus = self[(0,0)].modulus();
-		let mut m = Matrix::<ModularArithmeticPolynomial<T>>::new_empty(self.rows, other.cols, ModularArithmeticPolynomial::<T>::new_zero(modulus)).unwrap();
+		let mut coefs = Vec::<ModularArithmeticPolynomial<T>>::with_capacity(self.rows * other.cols);
 
 		for x in 0..self.rows {
 			for y in 0..other.cols {
-				for i in 0..self.cols {
-					m[(x,y)] += &(&self[(x, i)] * &other[(i, y)])?;
+				let mut coef = ModularArithmeticPolynomial::<T>::new_zero(modulus);
+				for (a,b) in self.row(x)?.zip(other_transposed.row(y)?) {
+					coef += &(a * b)?;
 				}
+				coefs.push(coef);
 			}
 		}
 		
-		Ok(m)
+		Matrix::<ModularArithmeticPolynomial<T>>::new(coefs, self.rows, other.cols)
 	}
 }
