@@ -120,6 +120,14 @@ impl<T: MatrixInput> Matrix<T> {
 
 		Ok(self.arr[x*self.cols..(x+1)*self.cols].iter())
 	}
+	#[allow(dead_code)]
+	fn row_mut(&mut self, x: usize) -> Result<std::slice::IterMut<T>, MatrixError> {
+		if x >= self.rows {
+			return Err(MatrixError::OutOfBoundsIndex(format!("x index too high: {} for size {}", x, self.rows)));
+		}
+
+		Ok(self.arr[x*self.cols..(x+1)*self.cols].iter_mut())
+	}
 
 	#[allow(dead_code)]
 	fn col(&self, y: usize) -> Result<StepBy<Skip<std::slice::Iter<T>>>, MatrixError> {
