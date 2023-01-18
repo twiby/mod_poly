@@ -33,10 +33,13 @@ impl<'a, T: MatrixInput + Number> Mul for &'a Matrix<T> {
 	}
 }
 
+use rayon::prelude::*;
+use std::sync::{Arc, Mutex};
+
 /// Mul operation for Polynomials, which don't have the Copy trait, and thus add by reference
 /// In addition, this allows catching any error coming from the modular Arithmetic module
 impl<'a, T> Mul for &'a Matrix<ModularArithmeticPolynomial<T>> 
-where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
+where T: Number + From<complex::Complex<f64>> + std::marker::Sync + std::marker::Send, complex::Complex<f64>: From<T> {
 	type Output = MatrixResult<ModularArithmeticPolynomial<T>>;
 
 	fn mul(self, other: &'a Matrix<ModularArithmeticPolynomial<T>>) -> MatrixResult<ModularArithmeticPolynomial<T>> {
@@ -46,21 +49,26 @@ where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
 			));
 		}
 
+		let rows = self.rows;
+		let cols = other.cols;
+
 		let other_transposed = other.clone_transposed();
 
 		let modulus = self[(0,0)].modulus();
-		let mut coefs = Vec::<ModularArithmeticPolynomial<T>>::with_capacity(self.rows * other.cols);
+		let coefs = Arc::new(Mutex::new(vec![ModularArithmeticPolynomial::<T>::new_zero(modulus); rows*cols]));
 
-		for x in 0..self.rows {
-			for y in 0..other.cols {
+		(0..rows).into_par_iter().for_each(|x| {
+			let mut idx = x*cols;
+			for y in 0..cols {
 				let mut coef = ModularArithmeticPolynomial::<T>::new_zero(modulus);
-				for (a,b) in self.row(x)?.zip(other_transposed.row(y)?) {
-					coef += &(a * b)?;
+				for (a,b) in self.row(x).unwrap().zip(other_transposed.row(y).unwrap()) {
+					coef += &(a * b).unwrap();
 				}
-				coefs.push(coef);
+				coefs.lock().unwrap()[idx] = coef;
+				idx += 1;
 			}
-		}
+		});
 		
-		Matrix::<ModularArithmeticPolynomial<T>>::new(coefs, self.rows, other.cols)
+		Matrix::<ModularArithmeticPolynomial<T>>::new(Arc::<Mutex<Vec<ModularArithmeticPolynomial<T>>>>::try_unwrap(coefs).unwrap().into_inner().unwrap(), rows, cols)
 	}
 }

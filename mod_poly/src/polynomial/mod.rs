@@ -19,7 +19,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, Neg};
 /// This sadly means it leaves on the heap, and cannot have the Copy trait. 
 /// TODO: If the maximum degree can be known at compile time, this could be on the stack, 
 /// and be made much more efficiently.
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Polynomial<T: Number> {
 	coefs: Vec<T>	
 }
@@ -164,7 +164,7 @@ type ModularArithmeticResult<T> = Result<ModularArithmeticPolynomial<T>, Modular
 
 /// Type representing a polynomial mod(x^modulus - 1).
 /// The coefs Vec inside polynomial must have length modulus.
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct ModularArithmeticPolynomial<T: Number> {
 	polynomial: Polynomial<T>
 }

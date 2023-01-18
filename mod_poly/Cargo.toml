@@ -9,3 +9,6 @@ name = "poly_arithmetic"
 [dependencies.pyo3]
 version = "0.15.1"
 features = ["extension-module"]
+
+[dependencies]
+rayon = "1.6.1"
