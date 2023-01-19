@@ -193,6 +193,34 @@ fn matrix_product_polynomials_2() {
 }
 
 #[test]
+fn matrix_product_polynomials_3() {
+	let a = complex::Complex::<f32>::from(1.0);
+	let b = complex::I_F32 * complex::Complex::<f32>::from(2.0);
+	let c = complex::Complex::new(1.0, 1.0);
+
+	let mod_poly_1 = ModularArithmeticPolynomial::new(&Polynomial::new(&[a,b,c]), 3);
+	let mod_poly_2 = ModularArithmeticPolynomial::new(&Polynomial::new(&[c,a,b]), 3);
+
+	let m1 = matrix::Matrix::new(
+		vec![
+			mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone(), 
+			mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone(), 
+			mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone(), 
+			mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone()], 
+		4, 4).unwrap();
+	let m2 = matrix::Matrix::new(
+		vec![
+			mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone(),
+			mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone(),
+			mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone(),
+			mod_poly_2.clone(), mod_poly_1.clone(), mod_poly_2.clone(), mod_poly_1.clone()], 
+		4, 4).unwrap();
+
+	let m = (&m1 * &m2).unwrap();
+	assert_eq!(m.to_string(), "[[[-4 + 16i, -10 + 12i, -6 + 20i], [-10 + 12i, -6 + 20i, -4 + 16i], [-4 + 16i, -10 + 12i, -6 + 20i], [-10 + 12i, -6 + 20i, -4 + 16i]],\n[[-4 + 16i, -10 + 12i, -6 + 20i], [-10 + 12i, -6 + 20i, -4 + 16i], [-4 + 16i, -10 + 12i, -6 + 20i], [-10 + 12i, -6 + 20i, -4 + 16i]],\n[[-4 + 16i, -10 + 12i, -6 + 20i], [-10 + 12i, -6 + 20i, -4 + 16i], [-4 + 16i, -10 + 12i, -6 + 20i], [-10 + 12i, -6 + 20i, -4 + 16i]],\n[[-4 + 16i, -10 + 12i, -6 + 20i], [-10 + 12i, -6 + 20i, -4 + 16i], [-4 + 16i, -10 + 12i, -6 + 20i], [-10 + 12i, -6 + 20i, -4 + 16i]]]");
+}
+
+#[test]
 fn matrix_product_polynomials_error() {
 	// P1(x) = 1 + 2i*x + (1 + i)*x²
 	// P2(x) = 1 + i + x + 2i*x²

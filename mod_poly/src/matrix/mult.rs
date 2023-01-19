@@ -48,17 +48,19 @@ where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
 
 		let other_transposed = other.clone_transposed();
 
-		&MatrixView::new(&self) * &MatrixView::new(&other_transposed)
+		mult(&MatrixView::new(&self), &MatrixView::new(&other_transposed))
 	}
 }
 
-struct MatrixView<'a, T: MatrixInput> {
+#[derive(Copy, Clone)]
+struct MatrixView<'a, T> {
 	m: &'a Matrix<T>,
 	cols: usize,
 	rows: usize,
 	x: usize,
 	y: usize
 }
+impl<'a, T: Number> Copy for MatrixView<'a, ModularArithmeticPolynomial<T>> {}
 
 impl<'a, T: MatrixInput> MatrixView<'a, T> {
 	fn new(m: &'a Matrix<T>) -> Self {
@@ -75,6 +77,10 @@ impl<'a, T: MatrixInput> MatrixView<'a, T> {
 		}
 	}
 
+	fn len(&self) -> usize {
+		self.cols * self.rows
+	}
+
 	fn first(&self) -> &T {
 		&self.m[(0,0)]
 	}
@@ -84,82 +90,211 @@ impl<'a, T: MatrixInput> MatrixView<'a, T> {
 	}
 }
 
-/// Mul operation for Polynomials, which don't have the Copy trait, and thus add by reference
+/// Add operation for Polynomials, which don't have the Copy trait, and thus add by reference
 /// In addition, this allows catching any error coming from the modular Arithmetic module
-impl<'a, 'b, T> Mul for &'a MatrixView<'b, ModularArithmeticPolynomial<T>> 
-where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
+impl<'b, T: Number> Add for MatrixView<'b, ModularArithmeticPolynomial<T>> {
 	type Output = MatrixResult<ModularArithmeticPolynomial<T>>;
 
-	fn mul(self, other_transposed: &'a MatrixView<'b, ModularArithmeticPolynomial<T>>) -> MatrixResult<ModularArithmeticPolynomial<T>> {
-		let rows = self.rows;
-		let cols = other_transposed.rows;
-		let inner = self.cols;
+	fn add(self, other: MatrixView<'b, ModularArithmeticPolynomial<T>>) -> MatrixResult<ModularArithmeticPolynomial<T>> {
+		let mut vec = Vec::<ModularArithmeticPolynomial<T>>::with_capacity(self.len());
 
-		if rows == 1 || cols == 1 || inner == 1 {
-			let modulus = self.first().modulus();
-			let mut coefs = Vec::<ModularArithmeticPolynomial<T>>::with_capacity(rows * cols);
-
-			for x in 0..rows {
-				for y in 0..cols {
-					let mut coef = ModularArithmeticPolynomial::<T>::new_zero(modulus);
-					for (a,b) in self.row(x)?.zip(other_transposed.row(y)?) {
-						coef += &(a * b)?;
-					}
-					coefs.push(coef);
-				}
-			}
-			
-			return Matrix::<ModularArithmeticPolynomial<T>>::new(coefs, rows, cols);
-		}
-
-		let rows_cut = rows >> 1;
-		let cols_cut = cols >> 1;
-		let inner_cut = inner >> 1;
-
-		let a_00 = self.view((0,0), (rows_cut, inner_cut));
-		let a_01 = self.view((0,inner_cut), (rows_cut, inner - inner_cut));
-		let a_10 = self.view((rows_cut,0), (rows-rows_cut, inner_cut));
-		let a_11 = self.view((rows_cut, inner_cut), (rows-rows_cut, inner-inner_cut));
-
-		let b_00 = other_transposed.view((0,0), (cols_cut, inner_cut));
-		let b_01 = other_transposed.view((0, inner_cut), (cols_cut, inner - inner_cut));
-		let b_10 = other_transposed.view((cols_cut, 0), (cols-cols_cut, inner_cut));
-		let b_11 = other_transposed.view((cols_cut, inner_cut), (cols-cols_cut, inner-inner_cut));
-
-		let mut c_00 = (&(&a_00 * &b_00)? + &(&a_01 * &b_01)?)?;
-		let mut c_01 = (&(&a_00 * &b_10)? + &(&a_01 * &b_11)?)?;
-		let mut c_10 = (&(&a_10 * &b_00)? + &(&a_11 * &b_01)?)?;
-		let mut c_11 = (&(&a_10 * &b_10)? + &(&a_11 * &b_11)?)?;
-
-		let modulus = self.first().modulus();
-		let mut coefs = vec![ModularArithmeticPolynomial::<T>::new_zero(modulus) ; rows * cols];
-		for x in 0..rows_cut {
-			let mut y = 0;
-			for val in c_00.row_mut(x)? {
-				std::mem::swap(&mut coefs[x*cols + y], val);
-				y += 1;
-
-			}
-			for val in c_01.row_mut(x)? {
-				std::mem::swap(&mut coefs[x*cols + y], val);
-				y += 1;
+		for x in 0..self.rows {
+			for (a,b) in self.row(x)?.zip(other.row(x)?) {
+				vec.push((a + b)?);
 			}
 		}
-		for x in rows_cut..rows {
-			let mut y = 0;
-			for val in c_10.row_mut(x-rows_cut)? {
-				std::mem::swap(&mut coefs[x*cols + y], val);
-				y += 1;
-
-			}
-			for val in c_11.row_mut(x-rows_cut)? {
-				std::mem::swap(&mut coefs[x*cols + y], val);
-				y += 1;
-			}
-		}
-
-		Matrix::<ModularArithmeticPolynomial<T>>::new(coefs, rows, cols)
+		Matrix::<ModularArithmeticPolynomial<T>>::new(vec, self.rows, self.cols)
 	}
+}
+/// Sub operation for Polynomials, which don't have the Copy trait, and thus add by reference
+/// In addition, this allows catching any error coming from the modular Arithmetic module
+impl<'b, T: Number> Sub for MatrixView<'b, ModularArithmeticPolynomial<T>> {
+	type Output = MatrixResult<ModularArithmeticPolynomial<T>>;
+
+	fn sub(self, other: MatrixView<'b, ModularArithmeticPolynomial<T>>) -> MatrixResult<ModularArithmeticPolynomial<T>> {
+		let mut vec = Vec::<ModularArithmeticPolynomial<T>>::with_capacity(self.len());
+
+		for x in 0..self.rows {
+			for (a,b) in self.row(x)?.zip(other.row(x)?) {
+				vec.push((a - b)?);
+			}
+		}
+		Matrix::<ModularArithmeticPolynomial<T>>::new(vec, self.rows, self.cols)
+	}
+}
+
+fn next_power_of_2(mut num: usize) -> usize {
+	let mut val:u32 = 0;
+
+	num=num-1;
+
+	while val <= 4 {
+		num = num | (num >> 2i32.pow(val));
+		val = val +1;
+	}
+
+	num=num+1;
+	return num;
+}
+
+fn naive_mult<'a, T>(a: &MatrixView<'a, ModularArithmeticPolynomial<T>>, b: &MatrixView<'a, ModularArithmeticPolynomial<T>>)
+->MatrixResult<ModularArithmeticPolynomial<T>>
+where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
+	let modulus = a.first().modulus();
+	let mut coefs = Vec::<ModularArithmeticPolynomial<T>>::with_capacity(a.rows * b.rows);
+
+	for x in 0..a.rows {
+		for y in 0..b.rows {
+			let mut coef = ModularArithmeticPolynomial::<T>::new_zero(modulus);
+			for (a,b) in a.row(x)?.zip(b.row(y)?) {
+				coef += &(a * b)?;
+			}
+			coefs.push(coef);
+		}
+	}
+	
+	return Matrix::<ModularArithmeticPolynomial<T>>::new(coefs, a.rows, b.rows);
+}
+
+fn stressen_mult<'a, T>(a: &MatrixView<'a, ModularArithmeticPolynomial<T>>, b: &MatrixView<'a, ModularArithmeticPolynomial<T>>)
+->MatrixResult<ModularArithmeticPolynomial<T>>
+where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
+	assert_eq!(a.cols, a.rows);
+	assert_eq!(b.cols, b.rows);
+	assert_eq!(a.cols, b.rows);
+
+	let size = a.rows;
+
+	// Size must be a power of 2 every step of the way
+	if (size & (size - 1)) != 0 {
+		panic!("Stressen: size is not a power of 2");
+	}
+
+	if size < 3 {
+		return naive_mult(&a, &b);
+	}
+
+	let cut = size >> 1;
+
+	let a_00 = a.view((0,0), (cut, cut));
+	let a_01 = a.view((0,cut), (cut, cut));
+	let a_10 = a.view((cut,0), (cut, cut));
+	let a_11 = a.view((cut, cut), (cut, cut));
+
+	let b_00 = b.view((0,0), (cut, cut));
+	let b_01 = b.view((0, cut), (cut, cut));
+	let b_10 = b.view((cut, 0), (cut, cut));
+	let b_11 = b.view((cut, cut), (cut, cut));
+
+	let m1 = stressen_mult(&MatrixView::new(&(a_00 + a_11)?), &MatrixView::new(&(b_00 + b_11)?))?;
+	let m2 = stressen_mult(&MatrixView::new(&(a_10 + a_11)?), &b_00)?;
+	let m3 = stressen_mult(&a_00, &MatrixView::new(&(b_10 - b_11)?))?;
+
+	let mut c_00 = stressen_mult(&MatrixView::new(&(a_01 - a_11)?), &MatrixView::new(&(b_01 + b_11)?))?;
+	let mut c_10 = stressen_mult(&a_11, &MatrixView::new(&(b_01 - b_00)?))?;
+	let mut c_01 = stressen_mult(&MatrixView::new(&(a_00 + a_01)?), &b_11)?;
+	let mut c_11 = stressen_mult(&MatrixView::new(&(a_10 - a_00)?), &MatrixView::new(&(b_00 + b_10)?))?;
+
+	c_00 += &m1;
+	c_00 += &c_10;
+	c_00 -= &c_01;
+
+	c_01 += &m3;
+	c_10 += &m2;
+
+	c_11 += &m1;
+	c_11 -= &m2;
+	c_11 += &m3;
+
+	let modulus = a.first().modulus();
+	let mut coefs = vec![ModularArithmeticPolynomial::<T>::new_zero(modulus) ; size * size];
+	for x in 0..cut {
+		let mut idx = x*size;
+		for val in c_00.row_mut(x)? {
+			std::mem::swap(&mut coefs[idx], val);
+			idx += 1;
+
+		}
+		for val in c_01.row_mut(x)? {
+			std::mem::swap(&mut coefs[idx], val);
+			idx += 1;
+		}
+	}
+	for x in cut..size {
+		let mut idx = x*size;
+		for val in c_10.row_mut(x-cut)? {
+			std::mem::swap(&mut coefs[idx], val);
+			idx += 1;
+
+		}
+		for val in c_11.row_mut(x-cut)? {
+			std::mem::swap(&mut coefs[idx], val);
+			idx += 1;
+		}
+	}
+
+	Matrix::<ModularArithmeticPolynomial<T>>::new(coefs, size, size)
+}
+
+fn mult<'a, T>(a: &MatrixView<'a, ModularArithmeticPolynomial<T>>, b: &MatrixView<'a, ModularArithmeticPolynomial<T>>) 
+->MatrixResult<ModularArithmeticPolynomial<T>>
+where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
+	let rows = a.rows;
+	let cols = b.rows;
+	let inner = a.cols;
+
+	if rows == 1 || cols == 1 || inner == 1 {
+		return naive_mult(a, b);
+	}
+
+	let rows_cut = next_power_of_2(rows) >> 1;
+	let cols_cut = next_power_of_2(cols) >> 1;
+	let inner_cut = next_power_of_2(inner) >> 1;
+	let &cut = [rows_cut, cols_cut, inner_cut].iter().min().unwrap();
+
+	let a_00 = a.view((0,0), (cut, cut));
+	let a_01 = a.view((0,cut), (cut, inner - cut));
+	let a_10 = a.view((cut,0), (rows-cut, cut));
+	let a_11 = a.view((cut, cut), (rows-cut, inner-cut));
+
+	let b_00 = b.view((0,0), (cut, cut));
+	let b_01 = b.view((0, cut), (cut, inner - cut));
+	let b_10 = b.view((cut, 0), (cols-cut, cut));
+	let b_11 = b.view((cut, cut), (cols-cut, inner-cut));
+
+	let mut c_00 = (&stressen_mult(&a_00, &b_00)? + &mult(&a_01, &b_01)?)?;
+	let mut c_01 = (&mult(&a_00, &b_10)? + &mult(&a_01, &b_11)?)?;
+	let mut c_10 = (&mult(&a_10, &b_00)? + &mult(&a_11, &b_01)?)?;
+	let mut c_11 = (&mult(&a_10, &b_10)? + &mult(&a_11, &b_11)?)?;
+
+	let modulus = a.first().modulus();
+	let mut coefs = vec![ModularArithmeticPolynomial::<T>::new_zero(modulus) ; rows * cols];
+	for x in 0..cut {
+		let mut idx = x*cols;
+		for val in c_00.row_mut(x)? {
+			std::mem::swap(&mut coefs[idx], val);
+			idx += 1;
+
+		}
+		for val in c_01.row_mut(x)? {
+			std::mem::swap(&mut coefs[idx], val);
+			idx += 1;
+		}
+	}
+	for x in cut..rows {
+		let mut idx = x*cols;
+		for val in c_10.row_mut(x-cut)? {
+			std::mem::swap(&mut coefs[idx], val);
+			idx += 1;
+
+		}
+		for val in c_11.row_mut(x-cut)? {
+			std::mem::swap(&mut coefs[idx], val);
+			idx += 1;
+		}
+	}
+
+	Matrix::<ModularArithmeticPolynomial<T>>::new(coefs, rows, cols)
 }
 
 #[test]

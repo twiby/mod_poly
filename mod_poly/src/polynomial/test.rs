@@ -138,6 +138,23 @@ fn add_mod_polynomial() {
 }
 
 #[test]
+fn sub_mod_polynomial() {
+	let mono_5 = Polynomial::new_monomial(1.0, 5);
+	let mono_6 = Polynomial::new_monomial(1.0, 6);
+
+	let mod_poly_5 = ModularArithmeticPolynomial::new(&mono_5, 3);
+	let mod_poly_6 = ModularArithmeticPolynomial::new(&mono_6, 3);
+
+	let sub_mod_poly = (&mod_poly_5 - &mod_poly_6).expect("");
+	assert_eq!(sub_mod_poly.apply(2.0), 3.0);
+
+	let sub_2 = (&mod_poly_5 - &mod_poly_5).unwrap();
+	assert_eq!(sub_2.apply(0.0), 0.0);
+	assert_eq!(sub_2.apply(1.0), 0.0);
+	assert_eq!(sub_2.apply(2.0), 0.0);
+}
+
+#[test]
 fn add_mod_polynomial_error() {
 	let mono_5 = Polynomial::new_monomial(1.0, 5);
 	let mono_6 = Polynomial::new_monomial(1.0, 6);
