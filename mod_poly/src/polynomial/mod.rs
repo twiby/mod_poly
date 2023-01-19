@@ -12,7 +12,7 @@ use convolution::convolution as convolution;
 use crate::complex;
 use crate::complex::Number;
 
-use std::ops::{Add, AddAssign, Mul};
+use std::ops::{Add, AddAssign, Sub, SubAssign, Mul};
 
 /// Type defining a general polynomial: 
 /// We store all coefficients in a Vec, its index in the Vec representing its degree.
@@ -87,6 +87,13 @@ impl<T: Number> Polynomial<T> {
 			self.coefs[i] += other.coefs[i];
 		}
 	}
+
+	/// Internal unsymmetrical sub_assign: we assume other.coefs has a smaller size
+	fn sub_to_self(&mut self,  other: &Polynomial<T>) {
+		for i in 0..other.coefs.len() {
+			self.coefs[i] -= other.coefs[i];
+		}
+	}
 }
 
 /// The AddAssign operation for polynomials references
@@ -109,6 +116,28 @@ impl<'a, T: Number> Add for &'a Polynomial<T> {
 		} else {
 			return Polynomial::<T>::add_internal(&other, &self);
 		}
+	}
+}
+
+/// The SubAssign operation for polynomials references
+impl<'a, T: Number> SubAssign<&'a Polynomial<T>> for Polynomial<T> {
+	fn sub_assign(&mut self, other: &'a Polynomial<T>) {
+		if other.coefs.len() > self.coefs.len() {
+			self.coefs.resize(other.coefs.len(), T::from(0.0));
+		}
+		self.sub_to_self(&other);
+	}
+}
+
+/// The Sub operation for polynomials references.
+impl<'a, T: Number> Sub for &'a Polynomial<T> {
+	type Output = Polynomial<T>;
+
+	fn sub(self, other: &'a Polynomial<T>) -> Polynomial<T> {
+		let mut ret = self.clone();
+		ret.coefs.resize(other.coefs.len(), T::from(0.0));
+		ret -= other;
+		ret
 	}
 }
 
@@ -223,6 +252,35 @@ impl<'a, T: Number> AddAssign<&'a ModularArithmeticPolynomial<T>> for ModularAri
 	fn add_assign(&mut self, other: &'a ModularArithmeticPolynomial<T>) {
 		self.check_modulus(&other).expect("AddAssign in modular arithmetic: modulus mismatched");
 		self.polynomial.add_to_self(&other.polynomial);
+	}
+}
+
+/// The Sub operation for polynomials references in a modular arithmetic.
+///
+/// This operation runs on references to avoid borrowing values (since Polynomial 
+/// doesn't implement the Copy trait). This returns a Result because there potentially 
+/// could be a mismatch of moduli between the two polynomials.
+impl<'a, T: Number> Sub for &'a ModularArithmeticPolynomial<T> {
+	type Output = ModularArithmeticResult<T>;
+
+	fn sub(self, other: &'a ModularArithmeticPolynomial<T>) -> ModularArithmeticResult<T> {
+		self.check_modulus(&other)?;
+		let mut ret = self.polynomial.clone();
+		ret -= &other.polynomial;
+		Ok(ModularArithmeticPolynomial::<T>{
+			polynomial: ret
+		})
+	}
+}
+
+/// The SubAssign operation for polynomials reference in a modular arithmetic.
+///
+/// This operation can potentially panic, if the two polynomials don't have
+/// the same modulus
+impl<'a, T: Number> SubAssign<&'a ModularArithmeticPolynomial<T>> for ModularArithmeticPolynomial<T> {
+	fn sub_assign(&mut self, other: &'a ModularArithmeticPolynomial<T>) {
+		self.check_modulus(&other).expect("SubAssign in modular arithmetic: modulus mismatched");
+		self.polynomial.sub_to_self(&other.polynomial);
 	}
 }
 

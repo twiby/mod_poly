@@ -99,6 +99,38 @@ fn add_polynomial() {
 }
 
 #[test]
+fn sub_polynomial() {
+	// P(x) = 1 + 2i*x + (1 + i)*x²
+	let a = Complex::<f32>::from(1.0);
+	let b = I_F32 * Complex::<f32>::from(2.0);
+	let c = Complex::new(1.0, 1.0);
+
+	let zero = Complex::<f32>::from(0.0);
+
+	let poly_1 = Polynomial::new(&[a,b,zero]);
+	let poly_2 = Polynomial::new(&[zero,zero,c]);
+
+	let sum_1 = &poly_1 - &poly_2;
+	assert_eq!(sum_1.apply(Complex::<f32>::from(1.0)), Complex::new(0.0, 1.0));
+}
+
+#[test]
+fn subassign_polynomial() {
+	// P(x) = 1 + 2i*x + (1 + i)*x²
+	let a = Complex::<f32>::from(1.0);
+	let b = I_F32 * Complex::<f32>::from(2.0);
+	let c = Complex::new(1.0, 1.0);
+
+	let zero = Complex::<f32>::from(0.0);
+
+	let mut poly_1 = Polynomial::new(&[a,b,zero]);
+	let poly_2 = Polynomial::new(&[zero,zero,c]);
+
+	poly_1 -= &poly_2;
+	assert_eq!(poly_1.apply(Complex::<f32>::from(1.0)), Complex::new(0.0, 1.0));
+}
+
+#[test]
 fn add_assign_polynomial() {
 	// P(x) = 1 + 2i*x + (1 + i)*x²
 	let a = Complex::<f32>::from(1.0);
@@ -135,6 +167,30 @@ fn add_mod_polynomial() {
 
 	let sum_mod_poly = (&mod_poly_5 + &mod_poly_6).expect("");
 	assert_eq!(sum_mod_poly.apply(2.0), 5.0);
+}
+
+#[test]
+fn sub_mod_polynomial() {
+	let mono_5 = Polynomial::new_monomial(1.0, 5);
+	let mono_6 = Polynomial::new_monomial(1.0, 6);
+
+	let mod_poly_5 = ModularArithmeticPolynomial::new(&mono_5, 3);
+	let mod_poly_6 = ModularArithmeticPolynomial::new(&mono_6, 3);
+
+	let sum_mod_poly = (&mod_poly_5 - &mod_poly_6).expect("");
+	assert_eq!(sum_mod_poly.apply(2.0), 3.0);
+}
+
+#[test]
+fn subassign_mod_polynomial() {
+	let mono_5 = Polynomial::new_monomial(1.0, 5);
+	let mono_6 = Polynomial::new_monomial(1.0, 6);
+
+	let mut mod_poly_5 = ModularArithmeticPolynomial::new(&mono_5, 3);
+	let mod_poly_6 = ModularArithmeticPolynomial::new(&mono_6, 3);
+
+	mod_poly_5 -= &mod_poly_6;
+	assert_eq!(mod_poly_5.apply(2.0), 3.0);
 }
 
 #[test]

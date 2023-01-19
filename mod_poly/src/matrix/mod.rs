@@ -8,7 +8,7 @@ mod mult;
 use crate::complex::Number;
 use crate::polynomial::{ModularArithmeticPolynomial, ModularArithmeticError};
 
-use std::ops::{Add, Index, IndexMut};
+use std::ops::{Add, Sub, Index, IndexMut};
 use std::iter::{Skip, StepBy};
 
 /// We define the trait representing the minimum operations necessary to build a matrix out if it
@@ -174,6 +174,25 @@ impl<'a, T: MatrixInput + Number> Add for &'a Matrix<T> {
 	}
 }
 
+/// Sub operation for any input that is a Number (in particular: has Copy and Add by value)
+impl<'a, T: MatrixInput + Number> Sub for &'a Matrix<T> {
+	type Output = MatrixResult<T>;
+
+	fn sub(self, other: &'a Matrix<T>) -> MatrixResult<T> {
+		if self.shape() != other.shape() {
+			return Err(MatrixError::UncompatibleMatrixShapes(
+				format!("Uncompatible matrix shapes for addition, {:?} and {:?}", self.shape(), other.shape())
+			));
+		}
+
+		let mut vec = Vec::<T>::with_capacity(self.len());
+		for i in 0..self.len() {
+			vec.push(self.arr[i] - other.arr[i]);
+		}
+		Ok(Matrix::<T>{arr: vec, cols: self.cols, rows: self.rows})
+	}
+}
+
 /// Add operation for Polynomials, which don't have the Copy trait, and thus add by reference
 /// In addition, this allows catching any error coming from the modular Arithmetic module
 impl<'a, T: Number> Add for &'a Matrix<ModularArithmeticPolynomial<T>> {
@@ -189,6 +208,26 @@ impl<'a, T: Number> Add for &'a Matrix<ModularArithmeticPolynomial<T>> {
 		let mut vec = Vec::<ModularArithmeticPolynomial<T>>::with_capacity(self.len());
 		for i in 0..self.len() {
 			vec.push((&self.arr[i] + &other.arr[i])?);
+		}
+		Ok(Matrix::<ModularArithmeticPolynomial<T>>{arr: vec, cols: self.cols, rows: self.rows})
+	}
+}
+
+/// Add operation for Polynomials, which don't have the Copy trait, and thus add by reference
+/// In addition, this allows catching any error coming from the modular Arithmetic module
+impl<'a, T: Number> Sub for &'a Matrix<ModularArithmeticPolynomial<T>> {
+	type Output = MatrixResult<ModularArithmeticPolynomial<T>>;
+
+	fn sub(self, other: &'a Matrix<ModularArithmeticPolynomial<T>>) -> MatrixResult<ModularArithmeticPolynomial<T>> {
+		if self.shape() != other.shape() {
+			return Err(MatrixError::UncompatibleMatrixShapes(
+				format!("Uncompatible matrix shapes for addition, {:?} and {:?}", self.shape(), other.shape())
+			));
+		}
+
+		let mut vec = Vec::<ModularArithmeticPolynomial<T>>::with_capacity(self.len());
+		for i in 0..self.len() {
+			vec.push((&self.arr[i] - &other.arr[i])?);
 		}
 		Ok(Matrix::<ModularArithmeticPolynomial<T>>{arr: vec, cols: self.cols, rows: self.rows})
 	}

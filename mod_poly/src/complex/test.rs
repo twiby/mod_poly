@@ -77,6 +77,17 @@ fn complex_add() {
 }
 
 #[test]
+fn complex_sub() {
+	let a = Complex::new(0.0, 0.0);
+	let mut b = a;
+
+	b.r = 1.0;
+	b.i = 1.0;
+
+	assert_eq!(b - a, b);
+}
+
+#[test]
 fn complex_dot() {
 	let a = Complex::new(1.0, 1.0);
 	let b = Complex::new(2.0, 3.0);
@@ -100,6 +111,16 @@ fn complex_addassign() {
 	a += b;
 
 	assert_eq!(a, Complex::new(3.0, 4.0));
+}
+
+#[test]
+fn complex_subassign() {
+	let mut a = Complex::new(1.0, 1.0);
+	let b = Complex::new(2.0, 3.0);
+
+	a -= b;
+
+	assert_eq!(a, Complex::new(-1.0, -2.0));
 }
 
 #[test]

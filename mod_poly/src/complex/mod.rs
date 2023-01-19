@@ -5,7 +5,7 @@
 #[cfg(test)]
 mod test;
 
-use std::ops::{Add, Mul, Sub, AddAssign, MulAssign};
+use std::ops::{Add, Mul, Sub, AddAssign, SubAssign, MulAssign};
 
 /// number i, on a f32 representation
 pub const I_F32: Complex::<f32> = Complex{r: 0.0, i: 1.0};
@@ -15,11 +15,11 @@ pub const I_F64: Complex::<f64> = Complex{r: 0.0, i: 1.0};
 /// Custom trait for what can be a number (real or complex)
 pub trait Number: 
 	Copy + std::fmt::Debug + std::fmt::Display + PartialEq + From<f32> + Default + 
-	AddAssign + MulAssign + Add<Output = Self> + Mul<Output = Self> + Sub<Output = Self> {}
+	AddAssign + SubAssign + MulAssign + Add<Output = Self> + Mul<Output = Self> + Sub<Output = Self> {}
 /// Custom trait for what can be a real number
 pub trait RealNumber: 
 	Copy + std::fmt::Debug + std::fmt::Display + PartialEq + From<f32> + Default + 
-	AddAssign + Add<Output = Self> + Mul<Output = Self> + Sub<Output = Self> {}
+	AddAssign + SubAssign + Add<Output = Self> + Mul<Output = Self> + Sub<Output = Self> {}
 
 impl Number for f32 {}
 impl Number for f64 {}
@@ -157,6 +157,13 @@ impl<T: RealNumber> AddAssign for Complex<T> {
 	fn add_assign(&mut self, other: Complex<T>) {
 		self.r += other.r;
 		self.i += other.i;
+	}
+}
+
+impl<T: RealNumber> SubAssign for Complex<T> {
+	fn sub_assign(&mut self, other: Complex<T>) {
+		self.r -= other.r;
+		self.i -= other.i;
 	}
 }
 

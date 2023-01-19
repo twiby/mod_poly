@@ -87,6 +87,23 @@ fn sum() {
 	assert_eq!(m3[(1,1)], complex::Complex::<f32>::new(4.0, -4.0));
 }
 
+#[test]
+fn sub() {
+	let a = complex::Complex::<f32>::new(1.0, 1.0);
+	let b = complex::Complex::<f32>::new(0.0, 1.0);
+	let c = complex::Complex::<f32>::new(2.0, 0.0);
+	let d = complex::Complex::<f32>::new(2.0, -2.0);
+
+	let m1 = matrix::Matrix::<complex::Complex<f32>>::new(vec![a,b,c,d], 2, 2).unwrap();
+	let m2 = matrix::Matrix::<complex::Complex<f32>>::new(vec![d,d,d,d], 2, 2).unwrap();
+	let m3 = (&m1 - &m2).unwrap();
+
+	assert_eq!(m3[(0,0)], complex::Complex::<f32>::new(-1.0, 3.0));
+	assert_eq!(m3[(0,1)], complex::Complex::<f32>::new(-2.0, 3.0));
+	assert_eq!(m3[(1,0)], complex::Complex::<f32>::new(0.0, 2.0));
+	assert_eq!(m3[(1,1)], complex::Complex::<f32>::new(0.0, 0.0));
+}
+
 use crate::polynomial::Polynomial;
 use crate::polynomial::ModularArithmeticPolynomial;
 
@@ -115,6 +132,34 @@ fn sum_matrix_of_polynomial() {
 	assert_eq!(m3[(0,0)].coef(2).unwrap(), zero);
 	assert_eq!(m3[(0,1)].coef(0).unwrap(), a);
 	assert_eq!(m3[(0,1)].coef(1).unwrap(), b);
+	assert_eq!(m3[(0,1)].coef(2).unwrap(), c);
+}
+
+#[test]
+fn sub_matrix_of_polynomial() {
+	// P(x) = 1 + 2i*x + (1 + i)*x²
+	let a = complex::Complex::<f32>::from(1.0);
+	let m_a = complex::Complex::<f32>::from(-1.0);
+
+	let b = complex::I_F32 * complex::Complex::<f32>::from(2.0);
+	let m_b = complex::I_F32 * complex::Complex::<f32>::from(-2.0);
+
+	let c = complex::Complex::new(1.0, 1.0);
+
+	let zero = complex::Complex::<f32>::from(0.0);
+
+	let poly_1 = ModularArithmeticPolynomial::new(&Polynomial::new(&[a,b,zero]), 3);
+	let poly_2 = ModularArithmeticPolynomial::new(&Polynomial::new(&[zero,zero,c]), 3);
+
+	let m1 = matrix::Matrix::new(vec![poly_1.clone(), poly_2], 2, 1).unwrap();
+	let m2 = matrix::Matrix::new(vec![poly_1.clone(), poly_1], 2, 1).unwrap();
+	let m3 = (&m1 - &m2).unwrap();
+
+	assert_eq!(m3[(0,0)].coef(0).unwrap(), zero);
+	assert_eq!(m3[(0,0)].coef(1).unwrap(), zero);
+	assert_eq!(m3[(0,0)].coef(2).unwrap(), zero);
+	assert_eq!(m3[(0,1)].coef(0).unwrap(), m_a);
+	assert_eq!(m3[(0,1)].coef(1).unwrap(), m_b);
 	assert_eq!(m3[(0,1)].coef(2).unwrap(), c);
 }
 
