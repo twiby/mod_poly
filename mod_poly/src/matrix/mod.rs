@@ -2,8 +2,8 @@
 
 #[cfg(test)]
 mod test;
-
 mod mult;
+mod matrix_view;
 
 use crate::complex::Number;
 use crate::polynomial::{ModularArithmeticPolynomial, ModularArithmeticError};
@@ -31,7 +31,7 @@ impl From<ModularArithmeticError> for MatrixError {
 }
 type MatrixResult<T> = Result<Matrix<T>, MatrixError>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Matrix<T> {
 	arr: Vec<T>,
 	cols: usize,
