@@ -1,4 +1,4 @@
-use crate::matrix::matrix_view::{matrix_mult, matrix_mult_poly};
+use crate::matrix::matrix_view::ops::{matrix_mult, matrix_mult_poly};
 use crate::complex;
 use crate::complex::Number;
 use crate::matrix::*;
