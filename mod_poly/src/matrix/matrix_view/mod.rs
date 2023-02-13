@@ -106,7 +106,8 @@ impl<'a, T: MatrixInput> MatrixView<'a, T> {
 	#[inline]
 	fn shape(&self) -> (usize, usize) {
 		(self.rows, self.cols)
-	}	#[inline]
+	}	
+	#[allow(dead_code)]
 	fn actual_shape(&self) -> (usize, usize) {
 		(self.actual_rows, self.actual_cols)
 	}
@@ -126,6 +127,12 @@ impl<'a, T: MatrixInput> Clone for MatrixView<'a, T> {
 		ret.rows = self.rows;
 		ret.cols = self.cols;
 		return ret;
+	}
+}
+
+impl<'a, T: MatrixInput> From<MatrixView<'a, T>> for Matrix<T> {
+	fn from(other: MatrixView<'a, T>) -> Matrix<T> {
+		Option::<Matrix<T>>::from(other.m).unwrap()
 	}
 }
 
@@ -183,6 +190,20 @@ where T: Number + From<crate::complex::Complex<f64>>, crate::complex::Complex<f6
 	fn inner_mul(a: &ModularArithmeticPolynomial<T>, b: &ModularArithmeticPolynomial<T>) -> ModularArithmeticPolynomial<T> {
 		(a * b).expect("ModularArithmeticError in matrix mult")
 	}
+}
+
+pub fn matrix_mult<T: Number + MatrixInput>(a: &Matrix<T>, b: &Matrix<T>) -> Matrix<T> {
+	let a_view = a.as_view();
+	let b_view = b.as_view();
+	let ret: MatrixView<T> = &a_view * &b_view;
+	Matrix::<T>::from(ret)
+}
+pub fn matrix_mult_poly<T>(a: &Matrix<ModularArithmeticPolynomial<T>>, b: &Matrix<ModularArithmeticPolynomial<T>>) -> Matrix<ModularArithmeticPolynomial<T>> 
+where T: Number + MatrixInput + From<crate::complex::Complex<f64>>, crate::complex::Complex<f64>: From<T> {
+	let a_view = a.as_view();
+	let b_view = b.as_view();
+	let ret: MatrixView<ModularArithmeticPolynomial<T>> = &a_view * &b_view;
+	Matrix::<ModularArithmeticPolynomial<T>>::from(ret)
 }
 
 impl<'a, 'b:'a, T: MatrixInput + InnerAddAssign> AddAssign<&'b MatrixView<'a, T> > for MatrixView<'a, T> {

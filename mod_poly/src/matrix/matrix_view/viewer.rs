@@ -70,6 +70,16 @@ impl<'a, 'b: 'a, T> From<&'b Viewer<'a, T>> for Viewer<'a, T> {
 	}
 }
 
+impl<'a, T: Clone> From<Viewer<'a, T>> for Option<T> {
+	fn from(other: Viewer<'a, T>) -> Option<T> {
+		match other {
+			Viewer::None => None,
+			Viewer::Owner(m) => Some(m),
+			Viewer::Reader(m) => Some(m.clone())
+		}
+	}
+}
+
 impl<'a, T, I> Index<I> for Viewer<'a, T> 
 where T: Index<I> {
 	type Output = <T as Index<I>>::Output;
