@@ -43,7 +43,10 @@ impl<T: Number> InnerMul for T {
 impl<T> InnerMul for ModularArithmeticPolynomial<T>
 where T: Number + From<crate::complex::Complex<f64>>, crate::complex::Complex<f64>: From<T> {
 	fn inner_mul(a: &ModularArithmeticPolynomial<T>, b: &ModularArithmeticPolynomial<T>) -> ModularArithmeticPolynomial<T> {
-		(a * b).expect("ModularArithmeticError in matrix mult")
+		match a * b {
+			Ok(ret) => ret,
+			Err(e) => panic!("Error in matrix multiplication of polynomials: {:?}", e)
+		}
 	}
 }
 
