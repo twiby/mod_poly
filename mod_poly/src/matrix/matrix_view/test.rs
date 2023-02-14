@@ -27,6 +27,15 @@ fn view_inner() {
 }
 
 #[test]
+fn view_writer() {
+	let mut v = Viewer::Owner(vec![1,2,3]);
+	let mut w = v.writer();
+
+	w[0] = 10;
+	assert_eq!(v.inner(), Some(&vec![10,2,3]));
+}
+
+#[test]
 fn view() {
 	let m = matrix::Matrix::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2, 3).unwrap();
 	let v = m.view((0,0), (2,3));
@@ -210,6 +219,33 @@ fn mat_own_idx() {
 	}
 	v[(1,0)] = 10.0;
 	assert_eq!(v[(1,0)], 10.0);
+}
+
+#[test]
+fn mat_own_writer() {
+	let mut v = MatrixView::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2, 3).unwrap();
+
+	assert_eq!(v.x, 0);
+	assert_eq!(v.y, 0);
+	assert_eq!(v.cols, 3);
+	assert_eq!(v.rows, 2);
+	assert_eq!(v[(1,0)], 4.0);
+
+
+	match v.m {
+		Viewer::Owner(ref mut mmm) => mmm[(1,0)] = 5.0,
+		_ => panic!("Wrong viewer type")
+	}
+
+	let mut w = v.writer((0,1), (2,2));
+
+	w[(1,1)] = -5.0;
+	assert_eq!(v[(0,0)], 1.0);
+	assert_eq!(v[(0,1)], 2.0);
+	assert_eq!(v[(0,2)], 3.0);
+	assert_eq!(v[(1,0)], 5.0);
+	assert_eq!(v[(1,1)], 5.0);
+	assert_eq!(v[(1,2)], -5.0);
 }
 
 #[test]

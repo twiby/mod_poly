@@ -83,6 +83,22 @@ impl<'a, T: MatrixInput> MatrixView<'a, T> {
 		}
 	}
 
+	fn writer<'m: 'n, 'n>(&'m mut self, block_coord: (usize, usize), block_size: (usize, usize)) -> MatrixView<'n, T> {
+		if block_coord.0 >= self.actual_rows || block_coord.1 >= self.actual_cols {
+			return MatrixView::<T>::none(block_size);
+		}
+
+		MatrixView{
+			m: self.m.writer(),
+			cols: block_size.1,
+			rows: block_size.0,
+			x: self.x + block_coord.0,
+			y: self.y + block_coord.1,
+			actual_rows: *[self.actual_rows - block_coord.0, block_size.0].iter().min().unwrap(),
+			actual_cols: *[self.actual_cols - block_coord.1, block_size.1].iter().min().unwrap()
+		}
+	} 
+
 	#[inline]
 	fn row(&self, n: usize) -> std::slice::Iter<T> {
 		assert!(n < self.actual_rows);
@@ -96,11 +112,10 @@ impl<'a, T: MatrixInput> MatrixView<'a, T> {
 	#[inline]
 	fn row_mut(&mut self, n: usize) -> std::slice::IterMut<T> {
 		assert!(n < self.actual_rows);
-		if !self.m.is_owner() {
-			panic!("cannot take a mutable row of a Viewer::None or Viewer::Reader");
-		}
-		let idx = self.m.inner().unwrap().idx(self.x+n, self.y);
-		self.m.inner_mut().unwrap().arr[idx..(idx + self.actual_cols)].iter_mut()
+		let idx = self.m.inner().expect("Attempt at reading a None MatrixView")
+			.idx(self.x+n, self.y);
+		self.m.inner_mut().expect("Attempt at writing a read-only MatrixView")
+			.arr[idx..(idx + self.actual_cols)].iter_mut()
 	}
 
 	#[inline]

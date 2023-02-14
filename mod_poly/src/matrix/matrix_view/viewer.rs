@@ -1,6 +1,7 @@
 use core::ops::{Index, IndexMut};
 
 pub enum Viewer<'a, T> {
+	Writer(&'a mut T),
 	Reader(&'a T),
 	Owner(T),
 	None
@@ -8,6 +9,7 @@ pub enum Viewer<'a, T> {
 impl<'a, T> Viewer<'a, T> {
 	pub fn inner(&self) -> Option<&T> {
 		match self {
+			Viewer::Writer(ref s) => Some(s),
 			Viewer::Reader(ref s) => Some(s),
 			Viewer::Owner(ref s) => Some(s),
 			Viewer::None => None
@@ -16,6 +18,7 @@ impl<'a, T> Viewer<'a, T> {
 	pub fn inner_mut(&mut self) -> Option<&mut T> {
 		match self {
 			Viewer::Reader(_) => None,
+			Viewer::Writer(ref mut s) => Some(s),
 			Viewer::Owner(ref mut s) => Some(s),
 			Viewer::None => None
 		}
@@ -25,6 +28,13 @@ impl<'a, T> Viewer<'a, T> {
 		match self.inner() {
 			None => Viewer::None,
 			Some(m) => Viewer::Reader(m)
+		}
+	}
+
+	pub fn writer<'m: 'n, 'n>(&'m mut self) -> Viewer<'n, T> {
+		match self.inner_mut() {
+			None => Viewer::None,
+			Some(s) => Viewer::Writer(s)
 		}
 	}
 
@@ -75,7 +85,8 @@ impl<'a, T: Clone> From<Viewer<'a, T>> for Option<T> {
 		match other {
 			Viewer::None => None,
 			Viewer::Owner(m) => Some(m),
-			Viewer::Reader(m) => Some(m.clone())
+			Viewer::Reader(m) => Some(m.clone()),
+			Viewer::Writer(m) => Some(m.clone())
 		}
 	}
 }
