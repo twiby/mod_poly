@@ -147,19 +147,30 @@ impl<'a, 'b:'a, T: MatrixInput + InnerSubAssign + InnerNeg> Sub for &'b MatrixVi
 	}
 }
 
-impl<'a, 'b:'a, T: MatrixInput + InnerMul + InnerAddAssign> Mul for &'b MatrixView<'a, T> {
+impl<'a, 'b:'a, T: MatrixInput + InnerMul + InnerAddAssign + Default> Mul for &'b MatrixView<'a, T> {
 	type Output = MatrixView<'a, T>;
 
 	fn mul(self: &'b MatrixView<'a, T>, other_transposed: &'b MatrixView<'a, T>) -> MatrixView<'a, T> {
 		assert_eq!(self.cols, other_transposed.cols);
 
+		if self.m.is_none() || other_transposed.m.is_none() {
+			return MatrixView::<T>::none((self.rows, other_transposed.rows));
+		}
+
+		let mut ret = MatrixView::<T>::new(
+			vec![T::default(); self.actual_rows * other_transposed.actual_rows], 
+			self.actual_rows, 
+			other_transposed.actual_rows
+		).unwrap();
+
 		let target_size = next_power_of_2(
 			*[self.rows, self.cols, other_transposed.rows, other_transposed.cols].iter().max().unwrap()
 		);
-
-		let mut ret = matrix_mult(
+		matrix_mult(
 			self.view((0,0), (target_size, target_size)), 
-			other_transposed.view((0,0), (target_size, target_size)));
+			other_transposed.view((0,0), (target_size, target_size)),
+			ret.writer((0,0), (target_size, target_size)));
+
 		ret.rows = self.rows;
 		ret.cols = other_transposed.rows;
 		ret
@@ -180,8 +191,11 @@ fn next_power_of_2(mut num: usize) -> usize {
 	return num;
 }
 
-fn matrix_mult<'a, T: MatrixInput + InnerMul + InnerAddAssign>(a: MatrixView<'a, T>, b_transposed: MatrixView<'a, T>)
- -> MatrixView<'a, T> {
+fn matrix_mult<'a, T>(
+	a: MatrixView<'a, T>, 
+	b_transposed: MatrixView<'a, T>,
+	ret: MatrixView<'a, T>)
+where T: MatrixInput + InnerMul + InnerAddAssign {
 
  	// Ensure inputs are square matrices whose sizes are a power of 2
  	assert_eq!(a.rows, b_transposed.rows);
@@ -191,14 +205,17 @@ fn matrix_mult<'a, T: MatrixInput + InnerMul + InnerAddAssign>(a: MatrixView<'a,
  	assert!(!((size & (size - 1)) != 0 || size == 0));
 
  	if a.m.is_none() || b_transposed.m.is_none() {
-		return MatrixView::<T>::none((size, size));
+		return;
 	}
 
- 	naive_mult(a, b_transposed)
+ 	naive_mult(a, b_transposed, ret);
  }
 
-fn naive_mult<'a, T: MatrixInput + InnerMul + InnerAddAssign>(a: MatrixView<'a, T>, b_transposed: MatrixView<'a, T>) -> MatrixView<'a, T> {
-	let mut coefs = Vec::<T>::with_capacity(a.actual_rows * b_transposed.actual_rows);
+fn naive_mult<'a, T>(
+	a: MatrixView<'a, T>, 
+	b_transposed: MatrixView<'a, T>,
+	mut ret: MatrixView<'a, T>)
+where T: MatrixInput + InnerMul + InnerAddAssign {
 	for x in 0..a.actual_rows {
 		for y in 0..b_transposed.actual_rows {
 			let mut it_self = a.row(x);
@@ -211,13 +228,7 @@ fn naive_mult<'a, T: MatrixInput + InnerMul + InnerAddAssign>(a: MatrixView<'a, 
 					&mut coef,
 					&<T as InnerMul>::inner_mul(a,b));
 			}
-			coefs.push(coef);
+			ret[(x,y)] = coef;
 		}
 	}
-
-	let mut ret = MatrixView::<T>::new(coefs, a.actual_rows, b_transposed.actual_rows).unwrap();
-	ret.rows = a.rows;
-	ret.cols = b_transposed.rows;
-
-	ret
 }
