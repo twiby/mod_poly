@@ -194,7 +194,7 @@ fn next_power_of_2(mut num: usize) -> usize {
 fn matrix_mult<'a, T>(
 	a: MatrixView<'a, T>, 
 	b_transposed: MatrixView<'a, T>,
-	ret: MatrixView<'a, T>)
+	mut ret: MatrixView<'a, T>)
 where T: MatrixInput + InnerMul + InnerAddAssign {
 
  	// Ensure inputs are square matrices whose sizes are a power of 2
@@ -206,15 +206,34 @@ where T: MatrixInput + InnerMul + InnerAddAssign {
 
  	if a.m.is_none() || b_transposed.m.is_none() {
 		return;
+	} else if size < 2 {
+		naive_mult(a, b_transposed, &mut ret);
+		return;
 	}
 
- 	naive_mult(a, b_transposed, ret);
+ 	let cut = size >> 1;
+
+ 	for &x in [0, cut].iter() {
+ 		for &y in [0, cut].iter() {
+	 		let mut w = ret.writer((x,y), (cut,cut));
+	 		if w.m.is_none() { continue; }
+
+		 	naive_mult(
+		 		a.view((x,0),(cut,cut)),
+		 		b_transposed.view((y,0),(cut,cut)),
+		 		&mut w);
+		 	add_naive_mult(
+		 		a.view((x,cut),(cut,cut)),
+		 		b_transposed.view((y,cut),(cut,cut)),
+		 		&mut w);
+		}
+ 	}
  }
 
 fn naive_mult<'a, T>(
 	a: MatrixView<'a, T>, 
 	b_transposed: MatrixView<'a, T>,
-	mut ret: MatrixView<'a, T>)
+	ret: &mut MatrixView<'a, T>)
 where T: MatrixInput + InnerMul + InnerAddAssign {
 	for x in 0..a.actual_rows {
 		for y in 0..b_transposed.actual_rows {
@@ -229,6 +248,28 @@ where T: MatrixInput + InnerMul + InnerAddAssign {
 					&<T as InnerMul>::inner_mul(a,b));
 			}
 			ret[(x,y)] = coef;
+		}
+	}
+}
+
+fn add_naive_mult<'a, T>(
+	a: MatrixView<'a, T>, 
+	b_transposed: MatrixView<'a, T>,
+	ret: &mut MatrixView<'a, T>)
+where T: MatrixInput + InnerMul + InnerAddAssign {
+	for x in 0..a.actual_rows {
+		for y in 0..b_transposed.actual_rows {
+			let mut it_self = a.row(x);
+			let mut it_other = b_transposed.row(y);
+			let mut coef = <T as InnerMul>::inner_mul(
+				it_self.next().unwrap(), 
+				it_other.next().unwrap());
+			for (a,b) in it_self.zip(it_other) {
+				<T as InnerAddAssign>::inner_add_assign(
+					&mut coef,
+					&<T as InnerMul>::inner_mul(a,b));
+			}
+			<T as InnerAddAssign>::inner_add_assign(&mut ret[(x,y)], &coef);
 		}
 	}
 }

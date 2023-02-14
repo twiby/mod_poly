@@ -179,6 +179,28 @@ fn matrix_product() {
 	assert_eq!(m3[(1,0)], complex::Complex::<f32>::new(2.0, -6.0));
 }
 
+#[test]
+fn matrix_product_2() {
+	const SIZE:usize = 32;
+	let mut v1 = Vec::<f32>::with_capacity(SIZE*SIZE);
+	let mut v2 = Vec::<f32>::with_capacity(SIZE*SIZE);
+	for _ in 0..SIZE*SIZE {
+		v1.push(1.0);
+		v2.push(1.0);
+	}
+
+	let m1 = matrix::Matrix::<f32>::new(v1, SIZE, SIZE).unwrap();
+	let m2 = matrix::Matrix::<f32>::new(v2, SIZE, SIZE).unwrap();
+	let m3 = (&m1 * &m2).unwrap();
+
+	for x in 0..SIZE {
+		for y in 0..SIZE {
+			println!("{}, {}", x,y);
+			assert_eq!(m3[(x,y)], SIZE as f32);
+		}
+	}
+}
+
 fn nearly_equal_f32(a: f32, b: f32) -> bool {
 	let abs_a = a.abs();
 	let abs_b = b.abs();
