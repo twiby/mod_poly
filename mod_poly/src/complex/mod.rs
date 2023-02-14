@@ -14,11 +14,11 @@ pub const I_F64: Complex::<f64> = Complex{r: 0.0, i: 1.0};
 
 /// Custom trait for what can be a number (real or complex)
 pub trait Number: 
-	Copy + std::fmt::Debug + std::fmt::Display + PartialEq + From<f32> + 
+	Copy + std::fmt::Debug + std::fmt::Display + PartialEq + From<f32> + Default + 
 	AddAssign + MulAssign + Add<Output = Self> + Mul<Output = Self> + Sub<Output = Self> {}
 /// Custom trait for what can be a real number
 pub trait RealNumber: 
-	Copy + std::fmt::Debug + std::fmt::Display + PartialEq + From<f32> +  
+	Copy + std::fmt::Debug + std::fmt::Display + PartialEq + From<f32> + Default + 
 	AddAssign + Add<Output = Self> + Mul<Output = Self> + Sub<Output = Self> {}
 
 impl Number for f32 {}
@@ -28,7 +28,7 @@ impl RealNumber for f64 {}
 
 /// Type representing complex numbers. 
 /// It depends on a generic parameter which represents real part and imaginary part. 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Default)]
 pub struct Complex<T: RealNumber> {
 	r: T,
 	i: T
