@@ -5,7 +5,7 @@ use core::ops::{Index, IndexMut};
 #[cfg(test)]
 mod test;
 mod viewer;
-pub mod ops;
+mod ops;
 
 use viewer::Viewer;
 
@@ -147,5 +147,12 @@ impl<'a, T: MatrixInput> IndexMut<(usize, usize)> for MatrixView<'a, T> {
 	fn index_mut(&mut self, index: (usize, usize)) -> &mut T {
 		&mut self.m[(self.x + index.0, self.y + index.1)]
 	}
+}
+
+pub fn matrix_mult<T: MatrixInput + ops::InnerMul + ops::InnerAddAssign>(a: &Matrix<T>, b: &Matrix<T>) -> Matrix<T> {
+	let a_view = a.as_view();
+	let b_view = b.as_view();
+	let ret: MatrixView<T> = &a_view * &b_view;
+	Matrix::<T>::from(ret)
 }
 

@@ -1,10 +1,9 @@
 use crate::matrix::matrix_view::*;
 use crate::matrix::{Number, ModularArithmeticPolynomial};
-use crate::matrix::{Matrix, MatrixInput};
 use core::ops::{AddAssign, SubAssign, Add, Sub, Mul};
 
 
-trait InnerAddAssign {
+pub trait InnerAddAssign {
 	fn inner_add_assign(a: &mut Self, b: &Self);
 }
 impl<T: Number> InnerAddAssign for T {
@@ -18,7 +17,7 @@ impl<T: Number> InnerAddAssign for ModularArithmeticPolynomial<T> {
 	}
 }
 
-trait InnerSubAssign {
+pub trait InnerSubAssign {
 	fn inner_sub_assign(a: &mut Self, b: &Self);
 }
 impl<T: Number> InnerSubAssign for T {
@@ -32,7 +31,7 @@ impl<T: Number> InnerSubAssign for ModularArithmeticPolynomial<T> {
 	}
 }
 
-trait InnerMul {
+pub trait InnerMul {
 	fn inner_mul(a: &Self, b: &Self) -> Self;
 }
 impl<T: Number> InnerMul for T {
@@ -48,20 +47,6 @@ where T: Number + From<crate::complex::Complex<f64>>, crate::complex::Complex<f6
 			Err(e) => panic!("Error in matrix multiplication of polynomials: {:?}", e)
 		}
 	}
-}
-
-pub fn matrix_mult<T: Number + MatrixInput>(a: &Matrix<T>, b: &Matrix<T>) -> Matrix<T> {
-	let a_view = a.as_view();
-	let b_view = b.as_view();
-	let ret: MatrixView<T> = &a_view * &b_view;
-	Matrix::<T>::from(ret)
-}
-pub fn matrix_mult_poly<T>(a: &Matrix<ModularArithmeticPolynomial<T>>, b: &Matrix<ModularArithmeticPolynomial<T>>) -> Matrix<ModularArithmeticPolynomial<T>> 
-where T: Number + MatrixInput + From<crate::complex::Complex<f64>>, crate::complex::Complex<f64>: From<T> {
-	let a_view = a.as_view();
-	let b_view = b.as_view();
-	let ret: MatrixView<ModularArithmeticPolynomial<T>> = &a_view * &b_view;
-	Matrix::<ModularArithmeticPolynomial<T>>::from(ret)
 }
 
 impl<'a, 'b:'a, T: MatrixInput + InnerAddAssign> AddAssign<&'b MatrixView<'a, T> > for MatrixView<'a, T> {

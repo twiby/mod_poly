@@ -1,4 +1,4 @@
-use crate::matrix::matrix_view::ops::{matrix_mult, matrix_mult_poly};
+use crate::matrix::matrix_view::matrix_mult;
 use crate::complex;
 use crate::complex::Number;
 use crate::matrix::*;
@@ -24,7 +24,7 @@ impl<'a, T: MatrixInput + Number> Mul for &'a Matrix<T> {
 /// Mul operation for Polynomials, which don't have the Copy trait, and thus add by reference
 /// In addition, this allows catching any error coming from the modular Arithmetic module
 impl<'a, T> Mul for &'a Matrix<ModularArithmeticPolynomial<T>> 
-where T: MatrixInput + Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
+where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
 	type Output = MatrixResult<ModularArithmeticPolynomial<T>>;
 
 	fn mul(self, other: &'a Matrix<ModularArithmeticPolynomial<T>>) -> MatrixResult<ModularArithmeticPolynomial<T>> {
@@ -35,6 +35,6 @@ where T: MatrixInput + Number + From<complex::Complex<f64>>, complex::Complex<f6
 		}
 
 		let other_transposed = other.clone_transposed();
-		Ok(matrix_mult_poly(self, &other_transposed))
+		Ok(matrix_mult(self, &other_transposed))
 	}
 }
