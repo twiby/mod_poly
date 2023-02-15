@@ -239,6 +239,11 @@ impl<T: Number> ModularArithmeticPolynomial<T> {
 		}
 		Ok(())
 	}
+
+	/// Checks wether polynomial has been initialized yet
+	fn is_default(&self) -> bool {
+		self.modulus() == 0
+	} 
 }
 
 /// The Add operation for polynomials references in a modular arithmetic.
@@ -250,6 +255,11 @@ impl<'a, T: Number> Add for &'a ModularArithmeticPolynomial<T> {
 	type Output = ModularArithmeticResult<T>;
 
 	fn add(self, other: &'a ModularArithmeticPolynomial<T>) -> ModularArithmeticResult<T> {
+		if self.is_default() {
+			return Ok(other.clone());
+		} else if other.is_default() {
+			return Ok(self.clone());
+		}
 		self.check_modulus(&other)?;
 		Ok(ModularArithmeticPolynomial::<T>{
 			polynomial: Polynomial::<T>::add_internal(&self.polynomial, &other.polynomial)
@@ -263,8 +273,14 @@ impl<'a, T: Number> Add for &'a ModularArithmeticPolynomial<T> {
 /// the same modulus
 impl<'a, T: Number> AddAssign<&'a ModularArithmeticPolynomial<T>> for ModularArithmeticPolynomial<T> {
 	fn add_assign(&mut self, other: &'a ModularArithmeticPolynomial<T>) {
-		self.check_modulus(&other).expect("AddAssign in modular arithmetic: modulus mismatched");
-		self.polynomial.add_to_self(&other.polynomial);
+		if other.is_default() {
+			return;
+		} else if self.is_default() {
+			self.polynomial = other.polynomial.clone();
+		} else {
+			self.check_modulus(&other).expect("AddAssign in modular arithmetic: modulus mismatched");
+			self.polynomial.add_to_self(&other.polynomial);
+		}
 	}
 }
 
@@ -277,7 +293,6 @@ impl<'a, T: Number> Sub for &'a ModularArithmeticPolynomial<T> {
 	type Output = ModularArithmeticResult<T>;
 
 	fn sub(self, other: &'a ModularArithmeticPolynomial<T>) -> ModularArithmeticResult<T> {
-		self.check_modulus(&other)?;
 		let mut ret = self.polynomial.clone();
 		ret -= &other.polynomial;
 		Ok(ModularArithmeticPolynomial::<T>{
@@ -292,8 +307,14 @@ impl<'a, T: Number> Sub for &'a ModularArithmeticPolynomial<T> {
 /// the same modulus
 impl<'a, T: Number> SubAssign<&'a ModularArithmeticPolynomial<T>> for ModularArithmeticPolynomial<T> {
 	fn sub_assign(&mut self, other: &'a ModularArithmeticPolynomial<T>) {
-		self.check_modulus(&other).expect("SubAssign in modular arithmetic: modulus mismatched");
-		self.polynomial.sub_to_self(&other.polynomial);
+		if other.is_default() {
+			return;
+		} else if self.is_default() {
+			*self = -other;
+		} else {
+			self.check_modulus(&other).expect("SubAssign in modular arithmetic: modulus mismatched");
+			self.polynomial.sub_to_self(&other.polynomial);
+		}
 	}
 }
 
@@ -326,6 +347,13 @@ where T: Number + From<complex::Complex<f64>>, complex::Complex<f64>: From<T> {
 	type Output = ModularArithmeticResult<T>;
 
 	fn mul(self, other: &'a ModularArithmeticPolynomial<T>) -> ModularArithmeticResult<T> {
+		if self.is_default() || other.is_default() {
+			return Ok(ModularArithmeticPolynomial::<T>::new(
+				&Polynomial::<T>::new(&vec![]),
+				*[self.modulus(), other.modulus()].iter().max().unwrap()
+			));
+		}
+
 		self.check_modulus(&other)?;
 
 		let convolution = convolution(&self.polynomial.coefs, &other.polynomial.coefs);
