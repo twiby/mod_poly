@@ -21,6 +21,19 @@ fn polynomial_real() {
 }
 
 #[test]
+fn polynomial_neg() {
+	// P(x) = 1 + 2*x + x²
+	let a = 1.0;
+	let b = 2.0;
+	let c = 1.0;
+
+	let poly_1 = Polynomial::new(&[a,b,c]);
+	let poly_2 = -&poly_1;
+
+	assert_eq!(poly_2.apply(2.0), -poly_1.apply(2.0));
+}
+
+#[test]
 fn polynomial_complex() {
 	// P(x) = 1 + 2i*x + (1 + i)*x²
 	let a = Complex::<f32>::from(1.0);
@@ -179,6 +192,16 @@ fn sub_mod_polynomial() {
 
 	let sum_mod_poly = (&mod_poly_5 - &mod_poly_6).expect("");
 	assert_eq!(sum_mod_poly.apply(2.0), 3.0);
+}
+
+#[test]
+fn neg_mod_polynomial() {
+	let mono_5 = Polynomial::new_monomial(1.0, 5);
+
+	let mod_poly_5 = ModularArithmeticPolynomial::new(&mono_5, 3);
+	let mod_poly_6 = -&mod_poly_5;
+
+	assert_eq!(mod_poly_6.apply(2.0), -mod_poly_5.apply(2.0));
 }
 
 #[test]

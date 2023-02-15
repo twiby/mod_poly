@@ -12,7 +12,7 @@ use convolution::convolution as convolution;
 use crate::complex;
 use crate::complex::Number;
 
-use std::ops::{Add, AddAssign, Sub, SubAssign, Mul};
+use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, Neg};
 
 /// Type defining a general polynomial: 
 /// We store all coefficients in a Vec, its index in the Vec representing its degree.
@@ -138,6 +138,19 @@ impl<'a, T: Number> Sub for &'a Polynomial<T> {
 		ret.coefs.resize(other.coefs.len(), T::from(0.0));
 		ret -= other;
 		ret
+	}
+}
+
+/// The Neg operattion for polynomials references
+impl<'a, T: Number> Neg for &'a Polynomial<T> {
+	type Output = Polynomial<T>;
+
+	fn neg(self) -> Polynomial<T> {
+		let mut coefs = Vec::<T>::with_capacity(self.coefs.len());
+		for &val in self.coefs.iter() {
+			coefs.push(-val);
+		}
+		Polynomial{coefs: coefs}
 	}
 }
 
@@ -281,6 +294,20 @@ impl<'a, T: Number> SubAssign<&'a ModularArithmeticPolynomial<T>> for ModularAri
 	fn sub_assign(&mut self, other: &'a ModularArithmeticPolynomial<T>) {
 		self.check_modulus(&other).expect("SubAssign in modular arithmetic: modulus mismatched");
 		self.polynomial.sub_to_self(&other.polynomial);
+	}
+}
+
+/// The Neg operation for polynomials references in a modular arithmetic.
+///
+/// This operation runs on references to avoid borrowing values (since Polynomial 
+/// doesn't implement the Copy trait).
+impl<'a, T: Number> Neg for &'a ModularArithmeticPolynomial<T> {
+	type Output = ModularArithmeticPolynomial<T>;
+
+	fn neg(self) -> ModularArithmeticPolynomial<T> {
+		ModularArithmeticPolynomial{
+			polynomial: -&self.polynomial
+		}
 	}
 }
 

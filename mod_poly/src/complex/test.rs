@@ -124,6 +124,15 @@ fn complex_subassign() {
 }
 
 #[test]
+fn neg() {
+	let b = Complex::new(2.0, 3.0);
+
+	let a = -b;
+
+	assert_eq!(a, Complex::new(-2.0, -3.0));
+}
+
+#[test]
 fn complex_mulassign() {
 	let mut a = Complex::new(1.0, 1.0);
 	let b = Complex::new(2.0, 3.0);
