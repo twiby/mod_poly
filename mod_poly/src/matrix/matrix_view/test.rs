@@ -99,6 +99,23 @@ fn sub_view() {
 }
 
 #[test]
+fn neg() {
+	let m = matrix::Matrix::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2, 3).unwrap();
+	let v = m.view((0,1), (2,2));
+	let v2 = -&v;
+
+	assert_eq!(v2.x, 0);
+	assert_eq!(v2.y, 0);
+	assert_eq!(v2.cols, 2);
+	assert_eq!(v2.rows, 2);
+
+	assert_eq!(v2[(0,0)], -2.0);
+	assert_eq!(v2[(0,1)], -3.0);
+	assert_eq!(v2[(1,0)], -5.0);
+	assert_eq!(v2[(1,1)], -6.0);
+}
+
+#[test]
 fn sub_view_2() {
 	let m = MatrixView::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2, 3).unwrap();
 	let v = m.view((0,1), (2,2));
@@ -297,6 +314,28 @@ fn sub() {
 }
 
 #[test]
+fn sub_none() {
+	let m1 = MatrixView::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2, 3).unwrap();
+
+	let m = Matrix::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2, 3).unwrap();
+	let m2 = m.view((1,1), (2, 3));
+	let none = MatrixView::<f32>::none((2,3));
+
+	let mut m3 = &m1 - &none;
+
+	assert_eq!(m3[(0,0)], 1.0);
+	assert_eq!(m3[(0,1)], 2.0);
+	assert_eq!(m3[(0,2)], 3.0);
+	assert_eq!(m3[(1,0)], 4.0);
+	assert_eq!(m3[(1,1)], 5.0);
+	assert_eq!(m3[(1,2)], 6.0);
+
+	m3 = &none - &m2;
+	assert_eq!(m3[(0,0)], -5.0);
+	assert_eq!(m3[(0,1)], -6.0);
+}
+
+#[test]
 fn add() {
 	let m1 = MatrixView::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2, 3).unwrap();
 
@@ -311,6 +350,28 @@ fn add() {
 	assert_eq!(m3[(1,0)], 4.0);
 	assert_eq!(m3[(1,1)], 5.0);
 	assert_eq!(m3[(1,2)], 6.0);
+}
+
+#[test]
+fn add_none() {
+	let m1 = MatrixView::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2, 3).unwrap();
+
+	let m = Matrix::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2, 3).unwrap();
+	let m2 = m.view((1,1), (2, 3));
+	let none = MatrixView::<f32>::none((2,3));
+
+	let mut m3 = &m1 + &none;
+
+	assert_eq!(m3[(0,0)], 1.0);
+	assert_eq!(m3[(0,1)], 2.0);
+	assert_eq!(m3[(0,2)], 3.0);
+	assert_eq!(m3[(1,0)], 4.0);
+	assert_eq!(m3[(1,1)], 5.0);
+	assert_eq!(m3[(1,2)], 6.0);
+
+	m3 = &none + &m2;
+	assert_eq!(m3[(0,0)], 5.0);
+	assert_eq!(m3[(0,1)], 6.0);
 }
 
 #[test]

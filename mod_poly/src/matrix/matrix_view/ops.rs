@@ -1,6 +1,6 @@
 use crate::matrix::matrix_view::*;
 use crate::matrix::{Number, ModularArithmeticPolynomial};
-use core::ops::{AddAssign, SubAssign, Add, Sub, Mul};
+use core::ops::{AddAssign, SubAssign, Add, Sub, Mul, Neg};
 
 
 pub trait InnerAddAssign {
@@ -28,6 +28,20 @@ impl<T: Number> InnerSubAssign for T {
 impl<T: Number> InnerSubAssign for ModularArithmeticPolynomial<T> {
 	fn inner_sub_assign(a: &mut ModularArithmeticPolynomial<T>, b: &ModularArithmeticPolynomial<T>) {
 		*a -= b;
+	}
+}
+
+pub trait InnerNeg {
+	fn inner_neg(a: &Self) -> Self;
+}
+impl<T: Number> InnerNeg for T {
+	fn inner_neg(a: &T) -> T {
+		-*a
+	}
+}
+impl<T: Number> InnerNeg for ModularArithmeticPolynomial<T> {
+	fn inner_neg(a: &ModularArithmeticPolynomial<T>) -> ModularArithmeticPolynomial<T> {
+		-a
 	}
 }
 
@@ -85,20 +99,48 @@ impl<'a, 'b:'a, T: MatrixInput + InnerSubAssign> SubAssign<&'b MatrixView<'a, T>
 	}
 }
 
+impl<'a, 'b:'a, T: MatrixInput + InnerNeg> Neg for &'b MatrixView<'a, T> {
+	type Output = MatrixView<'a, T>;
+
+	fn neg(self) -> MatrixView<'a, T> {
+		if self.m.is_none() {
+			return self.clone();
+		}
+		let mut coefs = Vec::<T>::with_capacity(self.actual_rows * self.actual_cols);
+
+		for x in 0..self.actual_rows {
+			for val in self.row(x) {
+				coefs.push(<T as InnerNeg>::inner_neg(&val));
+			}
+		}
+
+		let mut ret = MatrixView::<T>::new(coefs, self.actual_rows, self.actual_cols).unwrap();
+		ret.rows = self.rows;
+		ret.cols = self.cols;
+		return ret;
+	}
+}
+
 impl<'a, 'b:'a, T: MatrixInput + InnerAddAssign> Add for &'b MatrixView<'a, T> {
 	type Output = MatrixView<'a, T>;
 
 	fn add(self, other: &'b MatrixView<'a, T>) -> MatrixView<'a, T> {
+		if self.m.is_none() {
+			return other.clone();
+		}
 		let mut ret = (*self).clone();
 		ret += other;
 		return ret;
 	}
 }
 
-impl<'a, 'b:'a, T: MatrixInput + InnerSubAssign> Sub for &'b MatrixView<'a, T> {
+impl<'a, 'b:'a, T: MatrixInput + InnerSubAssign + InnerNeg> Sub for &'b MatrixView<'a, T> {
 	type Output = MatrixView<'a, T>;
 
 	fn sub(self, other: &'b MatrixView<'a, T>) -> MatrixView<'a, T> {
+		if self.m.is_none() {
+			return -other;
+		}
 		let mut ret = (*self).clone();
 		ret -= other;
 		return ret;

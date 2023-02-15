@@ -67,7 +67,7 @@ impl<'a, T: MatrixInput> MatrixView<'a, T> {
 		}
 	}
 
-	fn view<'m: 'n, 'n>(&'m self, block_coord: (usize, usize), block_size: (usize, usize)) -> MatrixView<'n, T> {
+	fn view<'m>(&'m self, block_coord: (usize, usize), block_size: (usize, usize)) -> MatrixView<'m, T> {
 		if block_coord.0 >= self.actual_rows || block_coord.1 >= self.actual_cols {
 			return MatrixView::<T>::none(block_size);
 		}
@@ -115,6 +115,10 @@ impl<'a, T: MatrixInput> MatrixView<'a, T> {
 
 impl<'a, T: MatrixInput> Clone for MatrixView<'a, T> {
 	fn clone(self: &MatrixView<'a, T>) -> MatrixView<'a, T> {
+		if self.m.is_none() {
+			return MatrixView::<T>::none((self.rows, self.cols));
+		}
+
 		let mut coefs = Vec::<T>::with_capacity(self.actual_rows * self.actual_cols);
 
 		for x in 0..self.actual_rows {
@@ -149,7 +153,8 @@ impl<'a, T: MatrixInput> IndexMut<(usize, usize)> for MatrixView<'a, T> {
 	}
 }
 
-pub fn matrix_mult<T: MatrixInput + ops::InnerMul + ops::InnerAddAssign>(a: &Matrix<T>, b: &Matrix<T>) -> Matrix<T> {
+pub fn matrix_mult<T>(a: &Matrix<T>, b: &Matrix<T>) -> Matrix<T>
+where T: MatrixInput + ops::InnerMul + ops::InnerAddAssign + ops::InnerNeg + std::default::Default {
 	let a_view = a.as_view();
 	let b_view = b.as_view();
 	let ret: MatrixView<T> = &a_view * &b_view;
