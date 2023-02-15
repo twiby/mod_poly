@@ -111,10 +111,10 @@ impl<'a, 'b:'a, T: MatrixInput + InnerOps> Sub for &'b MatrixView<'a, T> {
 	}
 }
 
-impl<'a, 'b:'a, T: MatrixInput + InnerOps> Mul for &'b MatrixView<'a, T> {
+impl<'a, T: MatrixInput + InnerOps> Mul for MatrixView<'a, T> {
 	type Output = MatrixView<'a, T>;
 
-	fn mul(self: &'b MatrixView<'a, T>, other_transposed: &'b MatrixView<'a, T>) -> MatrixView<'a, T> {
+	fn mul(self: MatrixView<'a, T>, other_transposed: MatrixView<'a, T>) -> MatrixView<'a, T> {
 		assert_eq!(self.cols, other_transposed.cols);
 
 		if self.m.is_none() || other_transposed.m.is_none() {

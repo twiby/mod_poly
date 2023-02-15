@@ -99,6 +99,23 @@ fn sub_view() {
 }
 
 #[test]
+fn sub_as_view() {
+	let m = matrix::Matrix::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2, 3).unwrap();
+	let v = m.view((0,1), (2,2));
+	let v2 = v.as_view();
+
+	assert_eq!(v2.x, 0);
+	assert_eq!(v2.y, 1);
+	assert_eq!(v2.cols, 2);
+	assert_eq!(v2.rows, 2);
+
+	assert_eq!(v2[(0,0)], 2.0);
+	assert_eq!(v2[(0,1)], 3.0);
+	assert_eq!(v2[(1,0)], 5.0);
+	assert_eq!(v2[(1,1)], 6.0);
+}
+
+#[test]
 fn neg() {
 	let m = matrix::Matrix::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 2, 3).unwrap();
 	let v = m.view((0,1), (2,2));
@@ -382,7 +399,7 @@ fn mul() {
 	let m_t = m.clone_transposed();
 	let m2 = m_t.view((1,1), (3, 2));
 
-	let m3 = &m1 * &m2;
+	let m3 = m1.as_view() * m2.as_view();
 
 	assert_eq!(m3.rows, 3);
 	assert_eq!(m3.cols, 3);
@@ -443,10 +460,7 @@ fn mul_matrix_of_polynomial() {
 	let m1 = matrix::Matrix::new(vec![poly_1.clone(), poly_2.clone()], 1, 2).unwrap();
 	let m2 = matrix::Matrix::new(vec![poly_1.clone(), poly_1.clone()], 1, 2).unwrap();
 
-	let v1 = m1.as_view();
-	let v2 = m2.as_view();
-
-	let m3 = &v1 * &v2;
+	let m3 = m1.as_view() * m2.as_view();
 	assert_eq!(m3.cols, 1);
 	assert_eq!(m3.rows, 1);
 

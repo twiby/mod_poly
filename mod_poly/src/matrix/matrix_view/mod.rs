@@ -83,6 +83,10 @@ impl<'a, T: MatrixInput> MatrixView<'a, T> {
 		}
 	}
 
+	fn as_view<'m>(&'m self) -> MatrixView<'m, T> {
+		self.view((0,0), (self.rows, self.cols))
+	}
+
 	#[inline]
 	fn row(&self, n: usize) -> std::slice::Iter<T> {
 		assert!(n < self.actual_rows);
@@ -155,9 +159,7 @@ impl<'a, T: MatrixInput> IndexMut<(usize, usize)> for MatrixView<'a, T> {
 
 pub fn matrix_mult<T>(a: &Matrix<T>, b: &Matrix<T>) -> Matrix<T>
 where T: MatrixInput + ops::InnerOps {
-	let a_view = a.as_view();
-	let b_view = b.as_view();
-	let ret: MatrixView<T> = &a_view * &b_view;
+	let ret: MatrixView<T> = a.as_view() * b.as_view();
 	Matrix::<T>::from(ret)
 }
 
