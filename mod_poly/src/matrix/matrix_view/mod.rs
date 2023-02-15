@@ -154,7 +154,7 @@ impl<'a, T: MatrixInput> IndexMut<(usize, usize)> for MatrixView<'a, T> {
 }
 
 pub fn matrix_mult<T>(a: &Matrix<T>, b: &Matrix<T>) -> Matrix<T>
-where T: MatrixInput + ops::InnerMul + ops::InnerAddAssign + ops::InnerNeg + std::default::Default {
+where T: MatrixInput + ops::InnerOps {
 	let a_view = a.as_view();
 	let b_view = b.as_view();
 	let ret: MatrixView<T> = &a_view * &b_view;

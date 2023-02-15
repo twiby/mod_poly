@@ -2,60 +2,24 @@ use crate::matrix::matrix_view::*;
 use crate::matrix::{Number, ModularArithmeticPolynomial};
 use core::ops::{AddAssign, SubAssign, Add, Sub, Mul, Neg};
 
-
-pub trait InnerAddAssign {
+pub trait InnerOps : Default {
 	fn inner_add_assign(a: &mut Self, b: &Self);
-}
-impl<T: Number> InnerAddAssign for T {
-	fn inner_add_assign(a: &mut T, b: &T) {
-		*a += *b;
-	}
-}
-impl<T: Number> InnerAddAssign for ModularArithmeticPolynomial<T> {
-	fn inner_add_assign(a: &mut ModularArithmeticPolynomial<T>, b: &ModularArithmeticPolynomial<T>) {
-		*a += b;
-	}
-}
-
-pub trait InnerSubAssign {
 	fn inner_sub_assign(a: &mut Self, b: &Self);
-}
-impl<T: Number> InnerSubAssign for T {
-	fn inner_sub_assign(a: &mut T, b: &T) {
-		*a -= *b;
-	}
-}
-impl<T: Number> InnerSubAssign for ModularArithmeticPolynomial<T> {
-	fn inner_sub_assign(a: &mut ModularArithmeticPolynomial<T>, b: &ModularArithmeticPolynomial<T>) {
-		*a -= b;
-	}
-}
-
-pub trait InnerNeg {
 	fn inner_neg(a: &Self) -> Self;
-}
-impl<T: Number> InnerNeg for T {
-	fn inner_neg(a: &T) -> T {
-		-*a
-	}
-}
-impl<T: Number> InnerNeg for ModularArithmeticPolynomial<T> {
-	fn inner_neg(a: &ModularArithmeticPolynomial<T>) -> ModularArithmeticPolynomial<T> {
-		-a
-	}
-}
-
-pub trait InnerMul {
 	fn inner_mul(a: &Self, b: &Self) -> Self;
 }
-impl<T: Number> InnerMul for T {
-	fn inner_mul(a: &T, b: &T) -> T {
-		*a * *b
-	}
+impl <T: Number> InnerOps for T {
+	fn inner_add_assign(a: &mut T, b: &T) { *a += *b }
+	fn inner_sub_assign(a: &mut T, b: &T) { *a -= *b }
+	fn inner_neg(a: &T) -> T { -*a }
+	fn inner_mul(a: &T, b: &T) -> T { *a * *b }
 }
-impl<T> InnerMul for ModularArithmeticPolynomial<T>
+impl <T> InnerOps for ModularArithmeticPolynomial<T>
 where T: Number + From<crate::complex::Complex<f64>>, crate::complex::Complex<f64>: From<T> {
-	fn inner_mul(a: &ModularArithmeticPolynomial<T>, b: &ModularArithmeticPolynomial<T>) -> ModularArithmeticPolynomial<T> {
+	fn inner_add_assign(a: &mut Self, b: &Self) { *a += b }
+	fn inner_sub_assign(a: &mut Self, b: &Self) { *a -= b }
+	fn inner_neg(a: &Self) -> Self { -a }
+	fn inner_mul(a: &Self, b: &Self) -> Self {
 		match a * b {
 			Ok(ret) => ret,
 			Err(e) => panic!("Error in matrix multiplication of polynomials: {:?}", e)
@@ -63,7 +27,7 @@ where T: Number + From<crate::complex::Complex<f64>>, crate::complex::Complex<f6
 	}
 }
 
-impl<'a, 'b:'a, T: MatrixInput + InnerAddAssign> AddAssign<&'b MatrixView<'a, T> > for MatrixView<'a, T> {
+impl<'a, 'b:'a, T: MatrixInput + InnerOps> AddAssign<&'b MatrixView<'a, T>> for MatrixView<'a, T> {
 	fn add_assign(&mut self, other: &'b MatrixView<'a, T>) {
 		assert_eq!(self.shape(), other.shape());
 		assert!(self.actual_rows >= other.actual_rows);
@@ -75,13 +39,13 @@ impl<'a, 'b:'a, T: MatrixInput + InnerAddAssign> AddAssign<&'b MatrixView<'a, T>
 
 		for x in 0..other.actual_rows {
 			for (val, add) in self.row_mut(x).zip(other.row(x)) {
-				<T as InnerAddAssign>::inner_add_assign(val, add);
+				<T as InnerOps>::inner_add_assign(val, add);
 			}
 		}
 	}
 }
 
-impl<'a, 'b:'a, T: MatrixInput + InnerSubAssign> SubAssign<&'b MatrixView<'a, T> > for MatrixView<'a, T> {
+impl<'a, 'b:'a, T: MatrixInput + InnerOps> SubAssign<&'b MatrixView<'a, T> > for MatrixView<'a, T> {
 	fn sub_assign(&mut self, other: &'b MatrixView<'a, T>) {
 		assert_eq!(self.shape(), other.shape());
 		assert!(self.actual_rows >= other.actual_rows);
@@ -93,13 +57,13 @@ impl<'a, 'b:'a, T: MatrixInput + InnerSubAssign> SubAssign<&'b MatrixView<'a, T>
 
 		for x in 0..other.actual_rows {
 			for (val, sub) in self.row_mut(x).zip(other.row(x)) {
-				<T as InnerSubAssign>::inner_sub_assign(val, sub);
+				<T as InnerOps>::inner_sub_assign(val, sub);
 			}
 		}
 	}
 }
 
-impl<'a, 'b:'a, T: MatrixInput + InnerNeg> Neg for &'b MatrixView<'a, T> {
+impl<'a, 'b:'a, T: MatrixInput + InnerOps> Neg for &'b MatrixView<'a, T> {
 	type Output = MatrixView<'a, T>;
 
 	fn neg(self) -> MatrixView<'a, T> {
@@ -110,7 +74,7 @@ impl<'a, 'b:'a, T: MatrixInput + InnerNeg> Neg for &'b MatrixView<'a, T> {
 
 		for x in 0..self.actual_rows {
 			for val in self.row(x) {
-				coefs.push(<T as InnerNeg>::inner_neg(&val));
+				coefs.push(<T as InnerOps>::inner_neg(&val));
 			}
 		}
 
@@ -121,7 +85,7 @@ impl<'a, 'b:'a, T: MatrixInput + InnerNeg> Neg for &'b MatrixView<'a, T> {
 	}
 }
 
-impl<'a, 'b:'a, T: MatrixInput + InnerAddAssign> Add for &'b MatrixView<'a, T> {
+impl<'a, 'b:'a, T: MatrixInput + InnerOps> Add for &'b MatrixView<'a, T> {
 	type Output = MatrixView<'a, T>;
 
 	fn add(self, other: &'b MatrixView<'a, T>) -> MatrixView<'a, T> {
@@ -134,7 +98,7 @@ impl<'a, 'b:'a, T: MatrixInput + InnerAddAssign> Add for &'b MatrixView<'a, T> {
 	}
 }
 
-impl<'a, 'b:'a, T: MatrixInput + InnerSubAssign + InnerNeg> Sub for &'b MatrixView<'a, T> {
+impl<'a, 'b:'a, T: MatrixInput + InnerOps> Sub for &'b MatrixView<'a, T> {
 	type Output = MatrixView<'a, T>;
 
 	fn sub(self, other: &'b MatrixView<'a, T>) -> MatrixView<'a, T> {
@@ -147,7 +111,7 @@ impl<'a, 'b:'a, T: MatrixInput + InnerSubAssign + InnerNeg> Sub for &'b MatrixVi
 	}
 }
 
-impl<'a, 'b:'a, T: MatrixInput + InnerMul + InnerAddAssign> Mul for &'b MatrixView<'a, T> {
+impl<'a, 'b:'a, T: MatrixInput + InnerOps> Mul for &'b MatrixView<'a, T> {
 	type Output = MatrixView<'a, T>;
 
 	fn mul(self: &'b MatrixView<'a, T>, other_transposed: &'b MatrixView<'a, T>) -> MatrixView<'a, T> {
@@ -162,13 +126,13 @@ impl<'a, 'b:'a, T: MatrixInput + InnerMul + InnerAddAssign> Mul for &'b MatrixVi
 			for y in 0..other_transposed.actual_rows {
 				let mut it_self = self.row(x);
 				let mut it_other = other_transposed.row(y);
-				let mut coef = <T as InnerMul>::inner_mul(
+				let mut coef = <T as InnerOps>::inner_mul(
 					it_self.next().unwrap(), 
 					it_other.next().unwrap());
 				for (a,b) in it_self.zip(it_other) {
-					<T as InnerAddAssign>::inner_add_assign(
+					<T as InnerOps>::inner_add_assign(
 						&mut coef,
-						&<T as InnerMul>::inner_mul(a,b));
+						&<T as InnerOps>::inner_mul(a,b));
 				}
 				coefs.push(coef);
 			}
