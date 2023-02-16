@@ -118,7 +118,7 @@ impl<'a, T: MatrixInput + InnerOps> Mul for MatrixView<'a, T> {
 		assert_eq!(self.cols, other_transposed.cols);
 
 		if self.m.is_none() || other_transposed.m.is_none() {
-			return MatrixView::<T>::none((self.rows, self.cols));
+			return MatrixView::<T>::none((self.rows, other_transposed.rows));
 		}
 
 		let mut coefs = Vec::<T>::with_capacity(self.actual_rows * other_transposed.actual_rows);

@@ -410,6 +410,30 @@ fn mul() {
 	assert_eq!(m3[(2,0)], 56.0);
 }
 
+#[test]
+fn mul_none() {
+	let m1 = MatrixView::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 3, 2).unwrap();
+	let n1 = MatrixView::<f32>::none((3,2));
+
+	let m = Matrix::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 3, 2).unwrap();
+	let m_t = m.clone_transposed();
+	let m2 = m_t.view((1,1), (3, 2));
+	let n2 = MatrixView::<f32>::none((3,2));
+
+	let mut m3 = m1.as_view() * n2.as_view();
+	assert_eq!(m3.rows, 3);
+	assert_eq!(m3.cols, 3);
+	assert_eq!(m3.actual_rows, 0);
+	assert_eq!(m3.actual_cols, 0);
+	assert!(m3.m.is_none());
+
+	m3 = n1.as_view() * m2.as_view();
+	assert_eq!(m3.rows, 3);
+	assert_eq!(m3.cols, 3);
+	assert_eq!(m3.actual_rows, 0);
+	assert_eq!(m3.actual_cols, 0);
+	assert!(m3.m.is_none());
+}
 use crate::complex;
 use crate::polynomial::Polynomial;
 
