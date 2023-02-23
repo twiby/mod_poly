@@ -1,3 +1,6 @@
+use crate::matrix::matrix_view::assigner::MatrixBinaryOperand;
+use crate::matrix::matrix_view::assigner::MatrixBinaryOperation;
+use crate::matrix::matrix_view::assigner::MatrixBinaryOperator;
 use crate::matrix::matrix_view::*;
 use crate::matrix::{Number, ModularArithmeticPolynomial};
 use core::ops::{AddAssign, SubAssign, Add, Sub, Mul, Neg};
@@ -111,37 +114,68 @@ impl<'a, 'b:'a, T: MatrixInput + InnerOps> Sub for &'b MatrixView<'a, T> {
 	}
 }
 
-impl<'a, T: MatrixInput + InnerOps> Mul for MatrixView<'a, T> {
-	type Output = MatrixView<'a, T>;
-
-	fn mul(self: MatrixView<'a, T>, other_transposed: MatrixView<'a, T>) -> MatrixView<'a, T> {
-		assert_eq!(self.cols, other_transposed.cols);
-
-		if self.m.is_none() || other_transposed.m.is_none() {
-			return MatrixView::<T>::none((self.rows, other_transposed.rows));
+pub struct MatrixMultiplicator {}
+impl<T1, T2> MatrixBinaryOperator<T1, T2> for MatrixMultiplicator
+where T1: MatrixBinaryOperand, T2: MatrixBinaryOperand<Data = T1::Data>, T1::Data: MatrixInput + InnerOps {
+	type Data = T1::Data;
+	fn shape(a: &T1, b: &T2) -> (usize, usize) {
+		(a.shape().0, b.shape().0)
+	}
+	fn actual_shape(a: &T1, b: &T2) -> (usize, usize) {
+		if a.actual_shape() == (0,0) || b.actual_shape() == (0,0) {
+			return (0,0);
 		}
-
-		let mut coefs = Vec::<T>::with_capacity(self.actual_rows * other_transposed.actual_rows);
-		for x in 0..self.actual_rows {
-			for y in 0..other_transposed.actual_rows {
-				let mut it_self = self.row(x);
-				let mut it_other = other_transposed.row(y);
-				let mut coef = <T as InnerOps>::inner_mul(
-					it_self.next().unwrap(), 
-					it_other.next().unwrap());
-				for (a,b) in it_self.zip(it_other) {
-					<T as InnerOps>::inner_add_assign(
-						&mut coef,
-						&<T as InnerOps>::inner_mul(a,b));
-				}
-				coefs.push(coef);
-			}
+		(a.actual_shape().0, b.actual_shape().0)
+	}
+	fn coef<'b>(a: &T1, b: &T2, x: usize, y: usize) -> Self::Data {
+		let mut coef = <Self::Data as InnerOps>::inner_mul(
+			&a.coef(x,0), 
+			&b.coef(y,0));
+		for i in 1..*[a.actual_shape().1, b.actual_shape().1].iter().min().unwrap() {
+			<Self::Data as InnerOps>::inner_add_assign(
+				&mut coef,
+				&<Self::Data as InnerOps>::inner_mul(&a.coef(x,i),&b.coef(y,i)));
 		}
+		coef
+	}
+}
 
-		let mut ret = MatrixView::<T>::new(coefs, self.actual_rows, other_transposed.actual_rows).unwrap();
-		ret.rows = self.rows;
-		ret.cols = other_transposed.rows;
-
+pub struct MatrixAdditionner {}
+impl<T1, T2> MatrixBinaryOperator<T1, T2> for MatrixAdditionner
+where T1: MatrixBinaryOperand, T2: MatrixBinaryOperand<Data = T1::Data>, T1::Data: MatrixInput + InnerOps {
+	type Data = T1::Data;
+	fn shape(a: &T1, _: &T2) -> (usize, usize) {
+		a.shape()
+	}
+	fn actual_shape(a: &T1, _: &T2) -> (usize, usize) {
+		a.actual_shape()
+	}
+	fn coef<'b>(a: &T1, b: &T2, x: usize, y: usize) -> Self::Data {
+		let mut ret = a.coef(x,y).clone();
+		Self::Data::inner_add_assign(&mut ret, &b.coef(x,y));
 		ret
+	}
+}
+
+impl<'a, T1, T> Mul<T1> for MatrixView<'a, T> 
+where T: MatrixInput + InnerOps, T1: MatrixBinaryOperand<Data = T> {
+	type Output = MatrixBinaryOperation<MatrixView<'a, T>, T1, MatrixMultiplicator>;
+
+	fn mul(self: MatrixView<'a, T>, other_transposed: T1) -> Self::Output {
+		assert_eq!(self.cols, other_transposed.shape().1);
+		return Self::Output::new(self, other_transposed);
+	}
+}
+impl<T, T1, T2, Op> Mul<T> for MatrixBinaryOperation<T1, T2, Op> 
+where 
+	T: MatrixBinaryOperand<Data = Op::Data>, 
+	T1: MatrixBinaryOperand, T2: MatrixBinaryOperand, 
+	Op: MatrixBinaryOperator<T1, T2>, 
+	Op::Data: MatrixInput + InnerOps {
+	type Output = MatrixBinaryOperation<MatrixBinaryOperation<T1, T2, Op>, T, MatrixMultiplicator>;
+
+	fn mul(self: MatrixBinaryOperation<T1, T2, Op>, other_transposed: T) -> Self::Output {
+		assert_eq!(self.shape().1, other_transposed.shape().1);
+		return Self::Output::new(self, other_transposed);
 	}
 }

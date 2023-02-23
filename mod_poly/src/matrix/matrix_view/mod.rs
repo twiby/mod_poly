@@ -6,10 +6,11 @@ use core::ops::{Index, IndexMut};
 mod test;
 mod viewer;
 mod ops;
+mod assigner;
 
 use viewer::Viewer;
 
-struct MatrixView<'a, T> {
+pub struct MatrixView<'a, T> {
 	m: Viewer<'a, Matrix<T>>,
 	cols: usize,
 	rows: usize,
@@ -159,7 +160,6 @@ impl<'a, T: MatrixInput> IndexMut<(usize, usize)> for MatrixView<'a, T> {
 
 pub fn matrix_mult<T>(a: &Matrix<T>, b: &Matrix<T>) -> Matrix<T>
 where T: MatrixInput + ops::InnerOps {
-	let ret: MatrixView<T> = a.as_view() * b.as_view();
-	Matrix::<T>::from(ret)
+	Matrix::<T>::from((a.as_view() * b.as_view()).make())
 }
 

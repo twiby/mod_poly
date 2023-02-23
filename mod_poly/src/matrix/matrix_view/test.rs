@@ -399,7 +399,7 @@ fn mul() {
 	let m_t = m.clone_transposed();
 	let m2 = m_t.view((1,1), (3, 2));
 
-	let m3 = m1.as_view() * m2.as_view();
+	let m3 = (m1.as_view() * m2.as_view()).make();
 
 	assert_eq!(m3.rows, 3);
 	assert_eq!(m3.cols, 3);
@@ -420,20 +420,57 @@ fn mul_none() {
 	let m2 = m_t.view((1,1), (3, 2));
 	let n2 = MatrixView::<f32>::none((3,2));
 
-	let mut m3 = m1.as_view() * n2.as_view();
+	let mut m3 = (m1.as_view() * n2.as_view()).make();
 	assert_eq!(m3.rows, 3);
 	assert_eq!(m3.cols, 3);
 	assert_eq!(m3.actual_rows, 0);
 	assert_eq!(m3.actual_cols, 0);
 	assert!(m3.m.is_none());
 
-	m3 = n1.as_view() * m2.as_view();
+	m3 = (n1.as_view() * m2.as_view()).make();
 	assert_eq!(m3.rows, 3);
 	assert_eq!(m3.cols, 3);
 	assert_eq!(m3.actual_rows, 0);
 	assert_eq!(m3.actual_cols, 0);
 	assert!(m3.m.is_none());
 }
+
+use crate::matrix::matrix_view::ops::MatrixMultiplicator;
+use crate::matrix::matrix_view::assigner::MatrixBinaryOperation;
+
+#[test]
+fn assignier() {
+	let m1 = MatrixView::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 3, 2).unwrap();
+
+	let m = Matrix::<f32>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 3, 2).unwrap();
+	let m_t = m.clone_transposed();
+	let m2 = m_t.view((1,1), (3, 2));
+
+	let ass = MatrixBinaryOperation::<MatrixView<f32>, MatrixView<f32>, MatrixMultiplicator>::new(m1.as_view(), m2.as_view());
+	let mut m3 = ass.make();
+
+	assert_eq!(m3.rows, 3);
+	assert_eq!(m3.cols, 3);
+	assert_eq!(m3.actual_rows, 3);
+	assert_eq!(m3.actual_cols, 1);
+	assert_eq!(m3[(0,0)], 16.0);
+	assert_eq!(m3[(1,0)], 36.0);
+	assert_eq!(m3[(2,0)], 56.0);
+
+	m3 = MatrixView::<f32>::new(vec![0.0,0.0,0.0], 3, 1).unwrap();
+	m3.rows = 3;
+	m3.cols = 3;
+
+	m3.set(ass);
+	assert_eq!(m3.rows, 3);
+	assert_eq!(m3.cols, 3);
+	assert_eq!(m3.actual_rows, 3);
+	assert_eq!(m3.actual_cols, 1);
+	assert_eq!(m3[(0,0)], 16.0);
+	assert_eq!(m3[(1,0)], 36.0);
+	assert_eq!(m3[(2,0)], 56.0);
+}
+
 use crate::complex;
 use crate::polynomial::Polynomial;
 
@@ -484,7 +521,7 @@ fn mul_matrix_of_polynomial() {
 	let m1 = matrix::Matrix::new(vec![poly_1.clone(), poly_2.clone()], 1, 2).unwrap();
 	let m2 = matrix::Matrix::new(vec![poly_1.clone(), poly_1.clone()], 1, 2).unwrap();
 
-	let m3 = m1.as_view() * m2.as_view();
+	let m3 = (m1.as_view() * m2.as_view()).make();
 	assert_eq!(m3.cols, 1);
 	assert_eq!(m3.rows, 1);
 
