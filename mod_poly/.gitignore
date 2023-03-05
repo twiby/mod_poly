@@ -1,2 +1,4 @@
 /target
 /Cargo.lock
+.DS_Store
+mod_poly/.DS_Store
