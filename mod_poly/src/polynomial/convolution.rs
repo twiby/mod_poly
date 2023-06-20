@@ -239,17 +239,6 @@ fn oddeven_sort(size: usize, indices: &mut [usize]) {
 	if (size & (size - 1)) != 0 || size == 0 {
 		panic!();
 	}
-
-	if size == 1 {
-		indices[0] = 0;
-		return;
-	}
-	
-	let half_size = size >> 1;
-	oddeven_sort(half_size, &mut indices[..half_size]);
-
-	for i in 0..half_size {
-		indices[i] <<= 1;
-		indices[i+half_size] = indices[i] + 1;
-	}
+	let shift = usize::BITS - size.ilog2();
+	indices.iter_mut().enumerate().for_each(|(i, n)| *n = i.reverse_bits() >> shift);
 }
