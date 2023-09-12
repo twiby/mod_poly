@@ -5,7 +5,8 @@
 //! want them to spill over to the rest of the code
 
 pub mod complex;
-pub mod polynomial;
 pub mod matrix;
-pub mod py_bindings;
+pub mod polynomial;
 
+#[cfg(feature = "pyo3")]
+pub mod py_bindings;

@@ -2,17 +2,21 @@
 Whether this will be ditributed as a Rust crate or a Python library, the bulk of the code will be in Rust, 
 so be sure you have rust installed (check https://www.rust-lang.org/learn/get-started).
 
-As usual, you can install dependencies using:
+# Usage as a Rust crate
+Every type is public and documented. You can run all the usuals:
+```shell
+cargo build
+cargo test
+cargo doc
+``` 
+
+# Usage as a Python module
+You can install dependencies and compile the Python wheel using:
 ```
-pip install -r requirements.txt
+pip install .
 ```
 And it is advised to use a virtual environment for this.
 
-You must also compile and install additional software components written in Rust: check the `README.md` of the `mod_poly` directory.
-
-# Usage as a library
-the `mod_poly` subfolder is a Rust project that can be used as a crate as is. Every type is public and documented. It can also be used as a Python module (if compiled according to instructions found there), every type being binded to a Python equivalent. With the binding comes a small lack of generality in types. 
-
 # Usage as Python app
-The file `mod_poly.py` can also serve as an app, partly to benchmark the underlying library performance, partly to launch an interface to manipulate complex numbers.
+The file `mod_poly.py` can also serve as an app, partly to benchmark the underlying library performance, partly to launch an interface to manipulate complex numbers. This can also serve as examples on how to use the generated Python module.
 Use `python3 mod_poly.py --help` to get help about options.
